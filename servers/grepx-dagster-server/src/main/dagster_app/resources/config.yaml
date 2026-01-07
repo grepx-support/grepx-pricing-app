@@ -1,0 +1,39 @@
+# Dagster Framework Configuration
+# ===============================
+# Framework-level settings for Dagster server
+# Assets, schedules, sensors, and resources are loaded from database
+
+app:
+  name: "grepx-dagster-server"
+  version: "1.0.0"
+
+dagster:
+  home: "${DAGSTER_HOME:./.dagster_home}"
+
+storage:
+  backend: "sqlite"
+  sqlite_path: "${DAGSTER_HOME:./.dagster_home}/storage.db"
+
+io_manager:
+  type: "filesystem"
+  base_dir: "${DAGSTER_HOME:./.dagster_home}/storage"
+
+compute_logs:
+  base_dir: "${DAGSTER_HOME:./.dagster_home}/logs"
+
+schedules:
+  enabled: true
+
+sensors:
+  enabled: true
+  minimum_interval_seconds: 30
+
+# Database configuration
+database:
+  db_url: "sqlite:///C:/Users/USER/development/grepx-pricing-app/data/dagster_config_orm.db"
+
+# Celery configuration
+celery:
+  broker_url: "redis://localhost:6379/0"
+  result_backend: "redis://localhost:6379/0"
+
