@@ -1,0 +1,10 @@
+# Shared models
+-e ../../shared/grepx-shared-models
+
+# Celery and dependencies
+celery==5.4.0
+redis==5.0.1
+hydra-core==1.3.2
+omegaconf==2.3.0
+flower==2.0.1
+sqlalchemy>=2.0.0

@@ -1,35 +1,23 @@
 #!/bin/bash
+
 set -e
 
-cd "$(dirname "$0")"
-source common.sh
+echo "=== Setting up all components ==="
 
-if [ ! -d "venv" ]; then
-    PYTHON=$(find_python)
-    log "Creating virtual environment..."
-    $PYTHON -m venv venv
-fi
+cd shared/grepx-shared-models
+./setup.sh
+cd ../..
 
-log "Upgrading pip..."
-$VENV_PYTHON -m pip install --upgrade pip
+cd servers/grepx-celery-server
+./setup.sh
+cd ../..
 
-# Install libs from ../libs
-LIBS_DIR="../libs"
-if [ -d "$LIBS_DIR" ]; then
-    log "Installing libraries from $LIBS_DIR..."
-    for lib in "$LIBS_DIR"/*; do
-        if [ -d "$lib" ]; then
-            log "  Installing $(basename $lib)..."
-            $VENV_PIP install -e "$lib"
-        fi
-    done
-fi
+cd servers/grepx-dagster-server
+./setup.sh
+cd ../..
 
-# Install requirements
-if [ -f "requirements.txt" ]; then
-    log "Installing requirements..."
-    $VENV_PIP install -r requirements.txt
-fi
+cd servers/grepx-task-generator-server
+./setup.sh
+cd ../..
 
-log "Setup complete!"
-log "Run: ./run.sh start"
+echo "=== Setup complete ==="

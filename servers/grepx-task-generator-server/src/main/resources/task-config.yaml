@@ -1,0 +1,10 @@
+# Task Generator Configuration
+# ============================
+# This file configures the task generator
+
+database:
+  db_url: "sqlite:///C:/Users/USER/development/grepx-dagster-server/dagster_config_orm.db"
+
+# Path to file containing tasks and assets definitions
+tasks_file: "resources/tasks.yaml"
+

@@ -1,0 +1,195 @@
+# Tasks and Assets Definitions
+# =============================
+# This file contains all Celery tasks and Dagster assets
+
+celery_tasks:
+  - name: tasks.fetch_stock_prices
+    module_path: tasks.stock_tasks
+    function_name: fetch_stock_prices
+    description: Fetch stock prices from Yahoo Finance
+    tags: [stocks, ingestion]
+    options:
+      bind: false
+      max_retries: 3
+    retry_policy:
+      max_retries: 3
+      interval_start: 0
+      interval_step: 0.2
+    timeout: 300
+    is_active: true
+
+  - name: tasks.calculate_volatility
+    module_path: tasks.stock_tasks
+    function_name: calculate_volatility
+    description: Calculate stock volatility
+    tags: [stocks, transformation]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 180
+    is_active: true
+
+  - name: tasks.calculate_metrics
+    module_path: tasks.stock_tasks
+    function_name: calculate_metrics
+    description: Calculate stock metrics
+    tags: [stocks, analytics]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 180
+    is_active: true
+
+  - name: tasks.analyze_portfolio
+    module_path: tasks.stock_tasks
+    function_name: analyze_portfolio
+    description: Analyze portfolio performance
+    tags: [stocks, analytics]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 300
+    is_active: true
+
+  - name: tasks.daily_analysis
+    module_path: tasks.stock_tasks
+    function_name: daily_analysis
+    description: Daily stock analysis
+    tags: [stocks, analytics, partitioned]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 180
+    is_active: true
+
+  - name: tasks.sector_performance
+    module_path: tasks.stock_tasks
+    function_name: sector_performance
+    description: Sector performance analysis
+    tags: [stocks, analytics, partitioned]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 300
+    is_active: true
+
+assets:
+  - name: fetch_prices
+    description: Fetch historical stock prices from Yahoo Finance
+    group_name: ingestion
+    asset_type: source
+    celery_task_name: tasks.fetch_stock_prices
+    dependencies: []
+    config:
+      tickers: [AAPL, MSFT, GOOG]
+    task_args: []
+    task_kwargs: {}
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: calculate_volatility
+    description: Compute daily volatility per stock
+    group_name: transformation
+    asset_type: transformation
+    celery_task_name: tasks.calculate_volatility
+    dependencies: [fetch_prices]
+    config: {}
+    task_args: []
+    task_kwargs: {}
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: stock_metrics
+    description: Compute stock metrics like mean return, volatility
+    group_name: analytics
+    asset_type: analytics
+    celery_task_name: tasks.calculate_metrics
+    dependencies: [fetch_prices, calculate_volatility]
+    config: {}
+    task_args: []
+    task_kwargs: {}
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: portfolio_analysis
+    description: Analyze portfolio performance and correlations
+    group_name: analytics
+    asset_type: analytics
+    celery_task_name: tasks.analyze_portfolio
+    dependencies: [fetch_prices, stock_metrics]
+    config: {}
+    task_args: []
+    task_kwargs: {}
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: daily_stock_analysis
+    description: Daily stock analysis by partition
+    group_name: analytics
+    asset_type: partitioned
+    celery_task_name: tasks.daily_analysis
+    dependencies: []
+    config:
+      tickers: [AAPL]
+    task_args: []
+    task_kwargs: {}
+    partition_type: daily
+    partition_config:
+      start_date: "2024-01-01"
+    is_active: true
+
+  - name: sector_performance
+    description: Performance metrics by sector
+    group_name: analytics
+    asset_type: partitioned
+    celery_task_name: tasks.sector_performance
+    dependencies: []
+    config: {}
+    task_args: []
+    task_kwargs: {}
+    partition_type: static
+    partition_config:
+      partitions: [Technology, Finance, Healthcare, Energy]
+    is_active: true
+
+resources:
+  - name: task_client
+    resource_type: task_client
+    config:
+      broker_url: "redis://localhost:6379/0"
+    is_active: true
+
+  - name: stock_database
+    resource_type: database
+    config:
+      connection_string: "sqlite:///stocks.db"
+    is_active: true
+
+schedules:
+  - name: daily_stock_refresh
+    cron_schedule: "0 16 * * 1-5"
+    target_assets: [fetch_prices, calculate_volatility, stock_metrics]
+    config: {}
+    is_active: true
+
+sensors:
+  - name: market_data_watcher
+    sensor_type: file_watcher
+    target_assets: [fetch_prices]
+    config:
+      watch_directory: "./market_data_incoming"
+    minimum_interval_seconds: 60
+    is_active: true
+
+  - name: price_alert_monitor
+    sensor_type: interval
+    target_assets: [stock_metrics]
+    config:
+      check_interval: 300
+    minimum_interval_seconds: 300
+    is_active: true
+

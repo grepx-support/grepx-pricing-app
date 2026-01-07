@@ -1,0 +1,28 @@
+app:
+  name: "celery_framework"
+  version: "1.0.0"
+
+celery:
+  broker_url: "redis://localhost:6379/0"
+  result_backend: "redis://localhost:6379/1"
+  task_serializer: "json"
+  result_serializer: "json"
+  accept_content:
+    - json
+  timezone: "Asia/Kolkata"
+  enable_utc: true
+
+worker:
+  prefetch_multiplier: 1
+  max_tasks_per_child: 50
+
+task:
+  track_started: true
+  time_limit: 1800
+  soft_time_limit: 1500
+  result_expires: 3600
+
+tasks:
+  database:
+    uri: "sqlite:///C:/Users/USER/development/grepx-dagster-server/dagster_config_orm.db"
+    table: "celery_tasks"
