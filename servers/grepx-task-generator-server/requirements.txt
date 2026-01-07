@@ -1,0 +1,13 @@
+# Task Generator Server Requirements
+# ===================================
+
+# Shared models
+-e ../../shared/grepx-shared-models
+
+# Core dependencies
+sqlalchemy==2.0.23
+pyyaml==6.0.2
+
+# Dagster (for ConfigurableResource base class)
+dagster==1.9.13
+
