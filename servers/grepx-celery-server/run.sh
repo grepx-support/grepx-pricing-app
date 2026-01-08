@@ -54,6 +54,8 @@ start() {
     
     python -m celery -A src.main.celery_app worker --loglevel=info --pool=solo > "$LOG_DIR/${SERVER_NAME}_${DATE}.log" 2>&1 &
     echo $! > "$PID_FILE"
+
+    python -m celery -A src.main.celery_app flower --address=${FLOWER_ADDRESS:-localhost} --port=${FLOWER_PORT:-5555} > "$LOG_DIR/${SERVER_NAME}_flower_${DATE}.log" 2>&1 &
     
     echo "$SERVER_NAME started (PID: $(cat $PID_FILE))"
 }
