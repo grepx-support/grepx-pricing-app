@@ -19,7 +19,7 @@ celery_tasks:
     timeout: 600
     is_active: true
 
-  # Indicator Calculation Tasks
+  # Indicator Calculation Tasks - All use calculate_indicator with indicator_type parameter
   - name: pricing.calculate_sma
     module_path: tasks.pricing_tasks
     function_name: calculate_indicator

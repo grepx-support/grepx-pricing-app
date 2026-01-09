@@ -1,8 +1,9 @@
 """Configuration for task execution and default values."""
 
 DEFAULT_DB_CONFIG = {
-    'type': 'csv',
-    'storage_path': 'storage'
+    'type': 'mongodb',
+    'connection_string': 'mongodb://admin:password123@localhost:27017/stock_analysis?authSource=admin',
+    'database_name': 'stock_analysis'
 }
 
 DEFAULT_TICKERS = ['AAPL', 'MSFT', 'GOOG']
