@@ -24,6 +24,5 @@ task:
 
 tasks:
   database:
-    uri: "sqlite:////Users/mahesh/Desktop/grepx-pricing-app/servers/grepx-dagster-server/dagster_config_orm.db"
-
+    uri: "sqlite:///../grepx-dagster-server/dagster_config_orm.db"
     table: "celery_tasks"
