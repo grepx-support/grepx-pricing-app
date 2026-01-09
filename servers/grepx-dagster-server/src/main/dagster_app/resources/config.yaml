@@ -30,7 +30,7 @@ sensors:
 
 # Database configuration
 database:
-  db_url: "sqlite:////Users/mahesh/Desktop/DESKTOP/Projects/grepx-pricing-app/grepx-dagster-server/dagster_config_orm.db"
+  db_url: "sqlite:///C:/Users/USER/development/new/grepx-pricing-app/dagster_config_orm.db"
 
 # Celery configuration
 celery:
