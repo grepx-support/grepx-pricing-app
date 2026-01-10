@@ -3,11 +3,21 @@ import logging
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'shared', 'grepx-shared-models', 'src'))
-
+# Use relative imports since we're inside business-tasks folder
 from .provider_config import ProviderConfig, DataDownloadConfig, ProviderType
-from business_tasks.database.factory import get_database
+
+# For database, we need to go up to parent and import
+parent_dir = os.path.join(os.path.dirname(__file__), '..')
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from database.factory import get_database
+
+# For grepx_models, add shared models to path
+shared_models_path = os.path.join(os.path.dirname(__file__), '..', '..', 'shared', 'grepx-shared-models', 'src')
+if shared_models_path not in sys.path:
+    sys.path.insert(0, shared_models_path)
+
 from grepx_models import BusinessTasksMaster, StorageMaster
 
 logger = logging.getLogger(__name__)

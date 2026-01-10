@@ -5,9 +5,12 @@ import pandas as pd
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+# Add parent directory to path
+parent_dir = os.path.join(os.path.dirname(__file__), '..')
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
-from business_tasks.database.factory import get_database
+from database.factory import get_database
 from .provider_factory import ProviderFactory
 from .config_loader import get_storage_config
 

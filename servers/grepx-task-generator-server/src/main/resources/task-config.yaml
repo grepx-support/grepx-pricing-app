@@ -5,6 +5,9 @@
 database:
   db_url: "sqlite:///../grepx-dagster-server/dagster_config_orm.db"
 
-# Path to file containing tasks and assets definitions
-tasks_file: "resources/pricing_tasks.yaml"
+# Path to files containing tasks and assets definitions
+tasks_files:
+  - "resources/pricing_tasks.yaml"
+  - "resources/test_tasks.yaml"
+
 
