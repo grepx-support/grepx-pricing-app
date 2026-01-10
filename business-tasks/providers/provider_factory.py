@@ -9,12 +9,7 @@ from .constants import Providers
 class ProviderFactory:
     @staticmethod
     def get_provider(provider_name: str, **kwargs) -> BaseProvider:
-        """
-        Factory method to get the appropriate provider instance.
-        :param provider_name: Name of the provider (e.g., "yahoo", "jugad", "custom").
-        :param kwargs: Additional arguments for the provider (e.g., file_path for CustomProvider).
-        :return: Instance of the requested provider.
-        """
+        """Factory method to get the appropriate provider instance."""
         if provider_name == Providers.YAHOO.value or provider_name == Providers.YAHOO:
             return YahooProvider()
         elif provider_name == Providers.YAHOO_FOR_BALANCE_SHEET.value or provider_name == Providers.YAHOO_FOR_BALANCE_SHEET:

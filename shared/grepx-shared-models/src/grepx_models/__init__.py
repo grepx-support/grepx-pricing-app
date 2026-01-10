@@ -8,7 +8,8 @@ from .sensor import Sensor
 from .asset_metadata import AssetMetadata
 from .celery_task import CeleryTask
 from .base import Base
-from .provider_config import ProviderConfig, DataDownloadConfig, ProviderType
+from .business_tasks_master import BusinessTasksMaster
+from .storage_master import StorageMaster, StorageType
 
 __all__ = [
     'Asset',
@@ -18,9 +19,9 @@ __all__ = [
     'AssetMetadata',
     'CeleryTask',
     'Base',
-    'ProviderConfig',
-    'DataDownloadConfig',
-    'ProviderType',
+    'BusinessTasksMaster',
+    'StorageMaster',
+    'StorageType',
 ]
 
 __version__ = "0.1.0"

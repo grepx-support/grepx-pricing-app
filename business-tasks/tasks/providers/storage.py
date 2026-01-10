@@ -1,11 +1,25 @@
-"""Data download task for storing price data in database."""
+"""Storage utilities for providers - save data to database."""
 from typing import Dict, Any, Optional
 import logging
-from tasks.providers import ProviderFactory
+import pandas as pd
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+
 from database.factory import get_database
-from config.task_config import DEFAULT_DB_CONFIG
+from .provider_factory import ProviderFactory
 
 logger = logging.getLogger(__name__)
+
+
+def _get_default_db_config() -> Dict[str, Any]:
+    """Get default database configuration."""
+    return {
+        'type': 'mongodb',
+        'connection_string': 'mongodb://admin:password123@localhost:27017/stock_analysis?authSource=admin',
+        'database_name': 'stock_analysis'
+    }
 
 
 def download_and_store(
@@ -31,15 +45,19 @@ def download_and_store(
         Result dictionary with ticker and record count
     """
     if db_config is None:
-        db_config = DEFAULT_DB_CONFIG
+        db_config = _get_default_db_config()
     
     if provider_name is None or period is None:
-        from business_tasks.config_loader import load_data_download_config
-        config = load_data_download_config()
-        if provider_name is None:
-            provider_name = config.provider.provider_type
-        if period is None:
-            period = config.default_period
+        from .config_loader import load_task_config
+        config = load_task_config('data_download_default')
+        if config:
+            if provider_name is None:
+                provider_name = config.get('provider_type', 'yahoo')
+            if period is None:
+                period = config.get('metadata', {}).get('default_period', '1y')
+        else:
+            provider_name = provider_name or 'yahoo'
+            period = period or '1y'
     
     try:
         logger.info(f"Downloading data for {ticker} using {provider_name} provider")
@@ -94,4 +112,42 @@ def download_and_store(
             'status': 'error',
             'error': str(e)
         }
+
+
+def download_and_store_multiple(
+    tickers: list,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    period: Optional[str] = None,
+    db_config: Optional[Dict[str, Any]] = None,
+    provider_name: Optional[str] = None
+) -> Dict[str, Dict[str, Any]]:
+    """
+    Download and store data for multiple tickers.
+    
+    Args:
+        tickers: List of stock ticker symbols
+        start_date: Start date (YYYY-MM-DD)
+        end_date: End date (YYYY-MM-DD)
+        period: Period to download (uses config default if not provided)
+        db_config: Database configuration
+        provider_name: Name of the data provider (uses config default if not provided)
+    
+    Returns:
+        Dictionary mapping ticker to result dictionary
+    """
+    results = {}
+    
+    for ticker in tickers:
+        result = download_and_store(
+            ticker=ticker,
+            start_date=start_date,
+            end_date=end_date,
+            period=period,
+            db_config=db_config,
+            provider_name=provider_name
+        )
+        results[ticker] = result
+    
+    return results
 
