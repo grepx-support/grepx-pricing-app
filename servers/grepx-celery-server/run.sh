@@ -44,8 +44,13 @@ activate_venv() {
 
 start() {
     if [ -f "$PID_FILE" ]; then
-        echo "$SERVER_NAME already running"
-        return
+        PID=$(cat "$PID_FILE")
+        if kill -0 $PID 2>/dev/null; then
+            echo "$SERVER_NAME already running (PID: $PID)"
+            return
+        else
+            rm -f "$PID_FILE"
+        fi
     fi
     
     echo "Starting $SERVER_NAME server..."
@@ -53,11 +58,17 @@ start() {
     cd "$SCRIPT_DIR"
     
     python -m celery -A src.main.celery_app worker --loglevel=info --pool=solo > "$LOG_DIR/${SERVER_NAME}_${DATE}.log" 2>&1 &
-    echo $! > "$PID_FILE"
+    WORKER_PID=$!
+    echo $WORKER_PID > "$PID_FILE"
 
-    python -m celery -A src.main.celery_app flower --address=${FLOWER_ADDRESS:-localhost} --port=${FLOWER_PORT:-5555} > "$LOG_DIR/${SERVER_NAME}_flower_${DATE}.log" 2>&1 &
+    python -m celery -A src.main.celery_app flower --address=${FLOWER_ADDRESS:-0.0.0.0} --port=${FLOWER_PORT:-5555} > "$LOG_DIR/${SERVER_NAME}_flower_${DATE}.log" 2>&1 &
+    FLOWER_PID=$!
+    echo $FLOWER_PID > "${PID_FILE}.flower"
     
-    echo "$SERVER_NAME started (PID: $(cat $PID_FILE))"
+    echo "$SERVER_NAME started"
+    echo "  Worker PID: $WORKER_PID"
+    echo "  Flower PID: $FLOWER_PID"
+    echo "  Flower UI: http://${FLOWER_ADDRESS:-localhost}:${FLOWER_PORT:-5555}"
 }
 
 stop() {
@@ -70,13 +81,61 @@ stop() {
         rm -f "$PID_FILE"
     fi
     
-    # Kill any remaining Celery processes
+    # Kill Flower
+    if [ -f "${PID_FILE}.flower" ]; then
+        FLOWER_PID=$(cat "${PID_FILE}.flower")
+        kill $FLOWER_PID 2>/dev/null || true
+        rm -f "${PID_FILE}.flower"
+    fi
+    
+    # Kill any remaining Celery worker processes
     pkill -f "celery.*worker" 2>/dev/null || true
     
-    # Kill Flower on port 5555
+    # Kill Flower processes
+    pkill -f "celery.*flower" 2>/dev/null || true
     pkill -f "flower.*--port" 2>/dev/null || true
-    if command -v lsof >/dev/null 2>&1; then
-        lsof -ti:5555 | xargs kill -9 2>/dev/null || true
+    
+    # On Windows/Git Bash, kill processes on port 5555
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]] || [[ -n "$WINDIR" ]]; then
+        echo "Killing processes on port ${FLOWER_PORT:-5555}..."
+        # Find and kill process on port 5555
+        netstat -ano | grep ":${FLOWER_PORT:-5555}" | grep LISTENING | awk '{print $5}' | while read pid; do
+            if [ -n "$pid" ] && [ "$pid" != "0" ]; then
+                echo "Killing PID $pid on port ${FLOWER_PORT:-5555}"
+                taskkill //F //PID $pid 2>/dev/null || true
+            fi
+        done
+        
+        # Alternative method using PowerShell
+        powershell.exe -Command "Get-NetTCPConnection -LocalPort ${FLOWER_PORT:-5555} -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$_.OwningProcess -Force -ErrorAction SilentlyContinue }" 2>/dev/null || true
+        
+        # Kill by process name pattern
+        taskkill //F //FI "IMAGENAME eq python.exe" //FI "WINDOWTITLE eq *celery*" 2>/dev/null || true
+        taskkill //F //FI "IMAGENAME eq python.exe" //FI "WINDOWTITLE eq *flower*" 2>/dev/null || true
+        
+        # Kill by command line pattern
+        for pid in $(ps -W 2>/dev/null | grep -iE "celery|flower" | awk '{print $1}'); do
+            if [ -n "$pid" ] && [ "$pid" != "PID" ]; then
+                taskkill //F //PID $pid 2>/dev/null || true
+            fi
+        done
+    else
+        # Unix-like systems - use lsof
+        if command -v lsof >/dev/null 2>&1; then
+            lsof -ti:${FLOWER_PORT:-5555} | xargs kill -9 2>/dev/null || true
+        fi
+    fi
+    
+    # Wait for processes to terminate
+    sleep 2
+    
+    # Verify port is free
+    if command -v netstat >/dev/null 2>&1; then
+        if netstat -ano 2>/dev/null | grep ":${FLOWER_PORT:-5555}" | grep LISTENING >/dev/null; then
+            echo "Warning: Port ${FLOWER_PORT:-5555} still in use"
+        else
+            echo "Port ${FLOWER_PORT:-5555} is now free"
+        fi
     fi
     
     echo "$SERVER_NAME stopped"
@@ -90,23 +149,36 @@ restart() {
 
 status() {
     echo "Server: $SERVER_NAME"
+    
+    # Check worker status
     if [ -f "$PID_FILE" ]; then
         PID=$(cat "$PID_FILE")
         if kill -0 $PID 2>/dev/null; then
-            echo "Status: RUNNING"
-            echo "PID: $PID"
+            echo "Worker Status: RUNNING (PID: $PID)"
         else
-            echo "Status: NOT RUNNING (stale PID)"
+            echo "Worker Status: NOT RUNNING (stale PID)"
             rm -f "$PID_FILE"
         fi
     else
-        echo "Status: NOT RUNNING"
+        echo "Worker Status: NOT RUNNING"
     fi
+    
+    # Check flower status
+    if [ -f "${PID_FILE}.flower" ]; then
+        FLOWER_PID=$(cat "${PID_FILE}.flower")
+        if kill -0 $FLOWER_PID 2>/dev/null; then
+            echo "Flower Status: RUNNING (PID: $FLOWER_PID)"
+        else
+            echo "Flower Status: NOT RUNNING (stale PID)"
+            rm -f "${PID_FILE}.flower"
+        fi
+    else
+        echo "Flower Status: NOT RUNNING"
+    fi
+    
     echo "Broker: ${CELERY_BROKER_URL:-redis://localhost:6379/0}"
     echo "Backend: ${CELERY_RESULT_BACKEND:-redis://localhost:6379/1}"
-    if [ -n "${FLOWER_PORT:-}" ]; then
-        echo "Flower UI: http://${FLOWER_ADDRESS:-localhost}:${FLOWER_PORT}"
-    fi
+    echo "Flower UI: http://${FLOWER_ADDRESS:-0.0.0.0}:${FLOWER_PORT:-5555}"
     echo ""
 }
 
