@@ -21,8 +21,33 @@ class TaskInfo:
     def load_function(self):
         """Load the task function."""
         import importlib
-        module = importlib.import_module(self.module_path)
-        return getattr(module, self.function_name)
+        import importlib.util
+        from pathlib import Path
+        
+        # If module path contains 'business-tasks', load it directly by file path
+        if 'business-tasks' in self.module_path:
+            # Get the project root (task_loader.py -> celery_app -> main -> src -> grepx-celery-server -> servers -> root)
+            project_root = Path(__file__).parent.parent.parent.parent.parent.parent
+            
+            # Convert module path to file path
+            # business-tasks.providers.storage -> business-tasks/providers/storage.py
+            parts = self.module_path.split('.')
+            file_path = project_root / '/'.join(parts[:-1]) / f"{parts[-1]}.py"
+            
+            if not file_path.exists():
+                # Try without the last part (might be a package)
+                file_path = project_root / '/'.join(parts) / '__init__.py'
+            
+            # Load module from file path
+            spec = importlib.util.spec_from_file_location(self.module_path, file_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return getattr(module, self.function_name)
+        else:
+            # Standard import
+            print("===========startdatd import fails===================={}".format(self.module_path))
+            module = importlib.import_module(self.module_path)
+            return getattr(module, self.function_name)
 
 
 def load_tasks_from_db(db_uri: str, table: str = "celery_tasks") -> List[TaskInfo]:

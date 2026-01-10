@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Task Generator Main Script
 ==========================
 Reads task-config.yaml, loads tasks/assets from specified file, and inserts into database
 """
 import sys
+import os
 from datetime import datetime
 from pathlib import Path
 
 import yaml
+
+# Fix encoding for Windows console
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # Get project root (src/main/task_generator/main.py -> src/)
 script_dir = Path(__file__).parent.parent.parent
@@ -209,18 +217,11 @@ def main():
     print("Loading configuration...")
     config = load_config(config_path)
     
-    # Get database URL and tasks file path
+    # Get database URL
     db_url = config['database']['db_url']
-    tasks_file = config.get('tasks_file', 'resources/tasks.yaml')
-    # Resolve tasks file path relative to main directory
-    if tasks_file.startswith('resources/'):
-        tasks_file_path = main_dir / tasks_file
-    else:
-        tasks_file_path = main_dir / "resources" / tasks_file
     
-    if not tasks_file_path.exists():
-        print(f"ERROR: Tasks file not found: {tasks_file_path}")
-        sys.exit(1)
+    # Get tasks files (support both old single file and new multiple files format)
+    tasks_files = config.get('tasks_files', [config.get('tasks_file', 'resources/pricing_tasks.yaml')])
     
     # Initialize database
     print(f"Connecting to database: {db_url}")
@@ -228,20 +229,76 @@ def main():
     db_manager.initialize_schema()
     print("Database schema initialized")
     
-    # Load tasks and assets
-    print(f"Loading tasks from: {tasks_file_path}")
-    tasks_data = load_tasks_file(tasks_file_path)
-    
-    # Insert into database
-    print("\n=== Inserting into Database ===")
-    
-    results = {
+    # Process each tasks file
+    total_results = {
         'celery_tasks': 0,
         'assets': 0,
         'resources': 0,
         'schedules': 0,
         'sensors': 0
     }
+    
+    for tasks_file in tasks_files:
+        if not tasks_file:
+            continue
+        
+        # Resolve tasks file path relative to main directory
+        if tasks_file.startswith('resources/'):
+            tasks_file_path = main_dir / tasks_file
+        else:
+            tasks_file_path = main_dir / "resources" / tasks_file
+        
+        if not tasks_file_path.exists():
+            print(f"WARNING: Tasks file not found, skipping: {tasks_file_path}")
+            continue
+        
+        # Load tasks and assets
+        print(f"\n=== Processing: {tasks_file_path.name} ===")
+        tasks_data = load_tasks_file(tasks_file_path)
+        
+        # Insert into database
+        results = {
+            'celery_tasks': 0,
+            'assets': 0,
+            'resources': 0,
+            'schedules': 0,
+            'sensors': 0
+        }
+        
+        if 'celery_tasks' in tasks_data:
+            print("\nInserting Celery tasks...")
+            results['celery_tasks'] = insert_celery_tasks(db_manager, tasks_data['celery_tasks'])
+        
+        if 'dagster_assets' in tasks_data:
+            print("\nInserting Dagster assets...")
+            results['assets'] = insert_assets(db_manager, tasks_data['dagster_assets'])
+        
+        if 'dagster_resources' in tasks_data:
+            print("\nInserting Dagster resources...")
+            results['resources'] = insert_resources(db_manager, tasks_data['dagster_resources'])
+        
+        if 'dagster_schedules' in tasks_data:
+            print("\nInserting Dagster schedules...")
+            results['schedules'] = insert_schedules(db_manager, tasks_data['dagster_schedules'])
+        
+        if 'dagster_sensors' in tasks_data:
+            print("\nInserting Dagster sensors...")
+            results['sensors'] = insert_sensors(db_manager, tasks_data['dagster_sensors'])
+        
+        # Update totals
+        for key in total_results:
+            total_results[key] += results[key]
+        
+        print(f"\n[OK] Completed {tasks_file_path.name}: {sum(results.values())} items created")
+    
+    print("\n=== Summary ===")
+    print(f"Total Celery tasks created: {total_results['celery_tasks']}")
+    print(f"Total Dagster assets created: {total_results['assets']}")
+    print(f"Total Dagster resources created: {total_results['resources']}")
+    print(f"Total Dagster schedules created: {total_results['schedules']}")
+    print(f"Total Dagster sensors created: {total_results['sensors']}")
+    print(f"\nGrand Total: {sum(total_results.values())} items created")
+    print("\n[OK] Task generation complete!")
     
     if 'celery_tasks' in tasks_data:
         print("\nCelery Tasks:")
