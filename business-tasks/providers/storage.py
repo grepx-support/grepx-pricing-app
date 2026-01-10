@@ -34,7 +34,7 @@ def download_and_store(
             if provider_name is None:
                 provider_name = config.get('provider_type', 'yahoo')
             if period is None:
-                period = config.get('metadata', {}).get('default_period', '1y')
+                period = config.get('task_metadata', {}).get('default_period', '1y')
         else:
             provider_name = provider_name or 'yahoo'
             period = period or '1y'

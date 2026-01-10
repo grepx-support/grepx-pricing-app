@@ -23,7 +23,7 @@ class BusinessTasksMaster(Base):
     priority = Column(Integer, default=5, nullable=False, comment='Task priority (1-10, higher = more priority)')
     schedule_expression = Column(String(100), nullable=True, comment='Cron expression or schedule string')
     depends_on = Column(JSON, nullable=True, comment='List of task IDs this task depends on')
-    metadata = Column(JSON, nullable=True, comment='Additional task-specific metadata')
+    task_metadata = Column(JSON, nullable=True, comment='Additional task-specific metadata')
     created_date = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_date = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     created_by = Column(String(100), nullable=True)
@@ -49,7 +49,7 @@ class BusinessTasksMaster(Base):
             'priority': self.priority,
             'schedule_expression': self.schedule_expression,
             'depends_on': self.depends_on,
-            'metadata': self.metadata,
+            'task_metadata': self.task_metadata,
             'created_date': self.created_date.isoformat() if self.created_date else None,
             'updated_date': self.updated_date.isoformat() if self.updated_date else None,
             'created_by': self.created_by,

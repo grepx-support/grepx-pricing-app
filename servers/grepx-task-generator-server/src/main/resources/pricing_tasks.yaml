@@ -5,7 +5,7 @@
 celery_tasks:
   # Data Download Tasks
   - name: pricing.download_ticker_data
-    module_path: tasks.pricing_tasks
+    module_path: business_tasks.providers.storage
     function_name: download_and_store
     description: Download stock price data from Yahoo Finance and store in database
     tags: [pricing, ingestion, download]
@@ -21,8 +21,8 @@ celery_tasks:
 
   # Indicator Calculation Tasks - All use calculate_indicator with indicator_type parameter
   - name: pricing.calculate_sma
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.sma
+    function_name: calculate
     description: Calculate Simple Moving Average indicator
     tags: [pricing, indicators, sma]
     options:
@@ -32,8 +32,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_ema
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.ema
+    function_name: calculate
     description: Calculate Exponential Moving Average indicator
     tags: [pricing, indicators, ema]
     options:
@@ -43,8 +43,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_rsi
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.rsi
+    function_name: calculate
     description: Calculate Relative Strength Index indicator
     tags: [pricing, indicators, rsi]
     options:
@@ -54,8 +54,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_macd
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.macd
+    function_name: calculate
     description: Calculate MACD indicator
     tags: [pricing, indicators, macd]
     options:
@@ -65,8 +65,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_bollinger_bands
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.bollinger_bands
+    function_name: calculate
     description: Calculate Bollinger Bands indicator
     tags: [pricing, indicators, bollinger]
     options:
@@ -76,8 +76,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_atr
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.atr
+    function_name: calculate
     description: Calculate Average True Range indicator
     tags: [pricing, indicators, atr]
     options:
@@ -87,8 +87,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_stochastic
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.stochastic
+    function_name: calculate
     description: Calculate Stochastic Oscillator indicator
     tags: [pricing, indicators, stochastic]
     options:
@@ -98,8 +98,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_adx
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.adx
+    function_name: calculate
     description: Calculate Average Directional Index indicator
     tags: [pricing, indicators, adx]
     options:
@@ -109,8 +109,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_obv
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.obv
+    function_name: calculate
     description: Calculate On-Balance Volume indicator
     tags: [pricing, indicators, obv]
     options:
@@ -120,8 +120,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_vwap
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.vwap
+    function_name: calculate
     description: Calculate Volume Weighted Average Price indicator
     tags: [pricing, indicators, vwap]
     options:
@@ -131,8 +131,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_cci
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.cci
+    function_name: calculate
     description: Calculate Commodity Channel Index indicator
     tags: [pricing, indicators, cci]
     options:
@@ -142,8 +142,8 @@ celery_tasks:
     is_active: true
 
   - name: pricing.calculate_williams_r
-    module_path: tasks.pricing_tasks
-    function_name: calculate_indicator
+    module_path: business_tasks.tasks.indicators.williams_r
+    function_name: calculate
     description: Calculate Williams %R indicator
     tags: [pricing, indicators, williams]
     options:

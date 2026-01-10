@@ -95,9 +95,9 @@ def load_provider_config() -> ProviderConfig:
         try:
             task_data = db.find_one('business_tasks_master', {'task_name': 'default_provider_config'})
             
-            if task_data and task_data.get('metadata'):
+            if task_data and task_data.get('task_metadata'):
                 logger.info("Loaded provider config from business_tasks_master")
-                metadata = task_data['metadata']
+                metadata = task_data['task_metadata']
                 return ProviderConfig(
                     provider_type=metadata.get('provider_type', ProviderType.YAHOO.value),
                     interval=metadata.get('interval', '1d'),

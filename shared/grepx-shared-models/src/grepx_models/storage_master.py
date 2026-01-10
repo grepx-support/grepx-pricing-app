@@ -35,7 +35,7 @@ class StorageMaster(Base):
     ssl_enabled = Column(Boolean, default=False, comment='Whether SSL/TLS is enabled')
     connection_params = Column(JSON, nullable=True, comment='Additional connection parameters as JSON')
     credentials = Column(JSON, nullable=True, comment='Additional credentials as JSON (encrypted)')
-    metadata = Column(JSON, nullable=True, comment='Additional metadata for storage configuration')
+    storage_metadata = Column(JSON, nullable=True, comment='Additional metadata for storage configuration')
     is_default = Column(Boolean, default=False, comment='Whether this is the default storage')
     active_flag = Column(Boolean, default=True, nullable=False)
     max_connections = Column(Integer, default=10, comment='Maximum number of connections in pool')
@@ -66,7 +66,7 @@ class StorageMaster(Base):
             'ssl_enabled': self.ssl_enabled,
             'connection_params': self.connection_params,
             'credentials': '***HIDDEN***',  # Never expose credentials in dict
-            'metadata': self.metadata,
+            'storage_metadata': self.storage_metadata,
             'is_default': self.is_default,
             'active_flag': self.active_flag,
             'max_connections': self.max_connections,
