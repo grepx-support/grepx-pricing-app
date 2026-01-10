@@ -28,6 +28,7 @@ dagster-webserver
 dagster_shared
 dnspython
 docstring_parser
+duckdb
 exceptiongroup
 filelock
 flower

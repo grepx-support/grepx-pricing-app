@@ -61,16 +61,24 @@ start() {
 }
 
 stop() {
-    if [ ! -f "$PID_FILE" ]; then
-        echo "$SERVER_NAME not running"
-        return
+    echo "Stopping $SERVER_NAME..."
+    
+    # Kill Celery worker
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        kill $PID 2>/dev/null || true
+        rm -f "$PID_FILE"
     fi
     
-    PID=$(cat "$PID_FILE")
-    echo "Stopping $SERVER_NAME (PID: $PID)..."
-    kill $PID 2>/dev/null || true
+    # Kill any remaining Celery processes
     pkill -f "celery.*worker" 2>/dev/null || true
-    rm -f "$PID_FILE"
+    
+    # Kill Flower on port 5555
+    pkill -f "flower.*--port" 2>/dev/null || true
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -ti:5555 | xargs kill -9 2>/dev/null || true
+    fi
+    
     echo "$SERVER_NAME stopped"
 }
 
