@@ -42,7 +42,21 @@ class MongoDBBackend(DatabaseBackend):
             conn_str = self._build_connection_string(connection_params)
 
         self.client = AsyncIOMotorClient(conn_str)
-        database_name = connection_params.get('database', 'ormlib')
+        # Use database_name from connection_params, fallback to 'database' key, or extract from connection string
+        database_name = connection_params.get('database_name') or connection_params.get('database')
+
+        # If still no database name, try to extract from connection string
+        if not database_name and 'connection_string' in connection_params:
+            # Extract database name from connection string (e.g., mongodb://host:port/dbname)
+            import re
+            match = re.search(r'mongodb://[^/]+/([^?]+)', conn_str)
+            if match:
+                database_name = match.group(1)
+
+        # Final fallback if nothing found
+        if not database_name:
+            database_name = 'default_db'
+
         self.database = self.client[database_name]
 
     def _build_connection_string(self, params: Dict[str, Any]) -> str:
