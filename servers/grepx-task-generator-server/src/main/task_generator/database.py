@@ -1,6 +1,7 @@
 """
 Database Configuration and Manager
 """
+import os
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
@@ -14,13 +15,20 @@ from grepx_models import Base, Asset, Resource, Schedule, Sensor, AssetMetadata,
 class DatabaseManager(ConfigurableResource):
     """Database Manager using SQLAlchemy ORM"""
     
-    db_url: str = "sqlite:///C:/Users/USER/development/grepx-pricing-app/data/dagster_config_orm.db"
+    db_url: str = ""
 
     def __init__(self, **kwargs):
         # Pass db_url to parent ConfigurableResource initialization
-        # If db_url not provided, use default
+        # If db_url not provided, use environment variable
         if 'db_url' not in kwargs:
-            kwargs['db_url'] = "sqlite:///C:/Users/USER/development/grepx-pricing-app/data/dagster_config_orm.db"
+            # Get from environment variable (should be set from env.common)
+            db_url_from_env = os.getenv('GREPX_MASTER_DB_URL')
+            if not db_url_from_env:
+                raise ValueError(
+                    "GREPX_MASTER_DB_URL environment variable not set. "
+                    "Please ensure env.common is loaded."
+                )
+            kwargs['db_url'] = db_url_from_env
         # Call parent init first to set db_url properly
         super().__init__(**kwargs)
         # Now initialize engine (db_url is accessible as self.db_url from parent)

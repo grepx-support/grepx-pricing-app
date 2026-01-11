@@ -2,8 +2,8 @@
 # ============================
 # This file configures the task generator
 
-database:
-  db_url: "sqlite:///../grepx-dagster-server/dagster_config_orm.db"
+# Note: Database URL is read from GREPX_MASTER_DB_URL environment variable
+# Make sure env.common is loaded before running this script
 
 # Path to files containing tasks and assets definitions
 tasks_files:

@@ -41,7 +41,7 @@ class ConfigLoader:
         return config
     
     def _substitute_env_vars(self, content: str) -> str:
-        """Substitute environment variables in format ${VAR:default}"""
+        """Substitute environment variables in format ${VAR} or ${VAR:default}"""
         import re
         
         def replace_var(match):
@@ -50,7 +50,10 @@ class ConfigLoader:
                 var_name, default = var_expr.split(':', 1)
                 return os.getenv(var_name, default)
             else:
-                return os.getenv(var_expr, match.group(0))
+                value = os.getenv(var_expr)
+                if value is None:
+                    raise ValueError(f"Environment variable {var_expr} not set. Ensure env.common is loaded.")
+                return value
         
         pattern = r'\$\{([^}]+)\}'
         return re.sub(pattern, replace_var, content)
