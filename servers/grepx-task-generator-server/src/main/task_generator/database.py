@@ -14,7 +14,7 @@ from grepx_models import Base, Asset, Resource, Schedule, Sensor, AssetMetadata,
 class DatabaseManager(ConfigurableResource):
     """Database Manager using SQLAlchemy ORM"""
     
-    db_url: str = "sqlite:///C:/Users/USER/development/grepx-pricing-app/data/dagster_config_orm.db"
+    db_url: str = "sqlite:///E:/Test_Main/grepx-pricing-app/data/dagster_config_orm.db"
 
     def __init__(self, **kwargs):
         # Pass db_url to parent ConfigurableResource initialization

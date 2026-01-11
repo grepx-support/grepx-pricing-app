@@ -9,7 +9,7 @@ VENV_DIR="venv"
 # Create virtual environment if missing
 if [ ! -d "$VENV_DIR" ]; then
     echo "Creating virtual environment..."
-    python3.12 -m venv "$VENV_DIR"
+    python -m venv "$VENV_DIR"
 fi
 
 # Cross-platform activation
@@ -25,7 +25,7 @@ fi
 source "$ACTIVATE_PATH"
 
 # Upgrade pip / setuptools / wheel
-python3.12 -m pip install --upgrade pip setuptools wheel
+python -m pip install --upgrade pip setuptools wheel
 
 # Install project dependencies
 pip install -r requirements.txt

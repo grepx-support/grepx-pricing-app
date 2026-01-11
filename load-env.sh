@@ -14,5 +14,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 load_env_file "$SCRIPT_DIR/env.common"
 load_env_file "$SCRIPT_DIR/servers/grepx-celery-server/env.celery"
 load_env_file "$SCRIPT_DIR/servers/grepx-dagster-server/env.dagster"
+load_env_file "$SCRIPT_DIR/servers/grepx-apache-airflow-server/env.airflow"
 load_env_file "$SCRIPT_DIR/servers/grepx-task-generator-server/env.generator"
 

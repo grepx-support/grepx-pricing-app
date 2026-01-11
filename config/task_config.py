@@ -2,8 +2,8 @@
 
 DEFAULT_DB_CONFIG = {
     'type': 'mongodb',
-    'connection_string': 'mongodb://admin:password123@localhost:27017/stock_analysis?authSource=admin',
-    'database_name': 'stock_analysis'
+    'connection_string': 'mongodb+srv://grepx_mongo_user:password@grepx.f0vzhpn.mongodb.net/stock_analysis_demo?appName=grepx',
+    'database_name': 'stock_analysis_demo'
 }
 
 DEFAULT_TICKERS = ['AAPL', 'MSFT', 'GOOG']

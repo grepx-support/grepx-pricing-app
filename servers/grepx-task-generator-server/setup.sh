@@ -1,14 +1,20 @@
 #!/bin/bash
-# setup.sh - Setup task generator server
+set -e
 
-set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$SCRIPT_DIR/venv"
 
-VENV_DIR="venv"
+echo "Setting up Task Generator Server..."
+echo ""
 
-# Create virtual environment if missing
+# Create virtual environment
 if [ ! -d "$VENV_DIR" ]; then
-    echo "Creating virtual environment..."
-    python3.12 -m venv "$VENV_DIR"
+    echo "▶ Creating virtual environment..."
+    python -m venv "$VENV_DIR"
+else
+    echo "▶ Removing old virtual environment..."
+    rm -rf "$VENV_DIR"
+    python -m venv "$VENV_DIR"
 fi
 
 # Cross-platform activation
@@ -17,16 +23,28 @@ if [ -f "$VENV_DIR/bin/activate" ]; then
 elif [ -f "$VENV_DIR/Scripts/activate" ]; then
     ACTIVATE_PATH="$VENV_DIR/Scripts/activate"
 else
-    echo "ERROR: Could not find virtual environment activation script."
+    echo "❌ ERROR: Could not find virtual environment activation script."
     exit 1
 fi
 
 source "$ACTIVATE_PATH"
+echo "✓ Virtual environment created"
 
 # Upgrade pip
-python3.12 -m pip install --upgrade pip
+echo ""
+echo "▶ Upgrading pip..."
+python -m pip install --upgrade pip setuptools wheel 2>&1 | grep -i "successfully\|already" || true
+echo "✓ pip upgraded"
 
 # Install dependencies
-pip install -r requirements.txt
+echo ""
+if [ -f "$SCRIPT_DIR/requirements.txt" ]; then
+    echo "▶ Installing requirements..."
+    pip install -r "$SCRIPT_DIR/requirements.txt"
+    echo "✓ Dependencies installed"
+else
+    echo "⚠️  requirements.txt not found"
+fi
 
-echo "Setup complete. You can now run ./run.sh"
+echo ""
+echo "✓ Setup complete! You can now run ./run.sh"
