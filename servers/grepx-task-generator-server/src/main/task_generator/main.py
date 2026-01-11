@@ -217,8 +217,14 @@ def main():
     print("Loading configuration...")
     config = load_config(config_path)
     
-    # Get database URL
-    db_url = config['database']['db_url']
+    # Get database URL - prefer environment variable over config file
+    db_url = os.getenv('GREPX_MASTER_DB_URL')
+    if not db_url:
+        # Fallback to config file if environment variable not set
+        db_url = config.get('database', {}).get('db_url')
+        if not db_url:
+            print("ERROR: GREPX_MASTER_DB_URL not set in environment and not found in config")
+            sys.exit(1)
     
     # Get tasks files (support both old single file and new multiple files format)
     tasks_files = config.get('tasks_files', [config.get('tasks_file', 'resources/pricing_tasks.yaml')])

@@ -24,5 +24,7 @@ task:
 
 tasks:
   database:
-    uri: "sqlite:///../grepx-dagster-server/dagster_config_orm.db"
+    # Database URI - uses GREPX_MASTER_DB_URL from env.common
+    # This should be an absolute path for consistency
+    uri: "${GREPX_MASTER_DB_URL}"
     table: "celery_tasks"

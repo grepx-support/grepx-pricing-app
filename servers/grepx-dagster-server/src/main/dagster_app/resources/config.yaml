@@ -29,8 +29,9 @@ sensors:
   minimum_interval_seconds: 30
 
 # Database configuration
+# Uses GREPX_MASTER_DB_URL from env.common (absolute path)
 database:
-  db_url: "sqlite:///../grepx-dagster-server/dagster_config_orm.db"
+  db_url: "${GREPX_MASTER_DB_URL}"
 
 # Celery configuration
 celery:

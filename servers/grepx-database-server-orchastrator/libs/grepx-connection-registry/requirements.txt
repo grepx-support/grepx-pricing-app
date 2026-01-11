@@ -1,0 +1,3 @@
+# Core dependencies - this library uses only Python standard library
+# No external dependencies required
+

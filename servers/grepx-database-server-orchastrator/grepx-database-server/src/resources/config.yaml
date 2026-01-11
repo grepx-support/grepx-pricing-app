@@ -1,0 +1,24 @@
+# Database Server Configuration
+# Note: Uses GREPX_MASTER_DB_URL from environment (set in env.common)
+
+master_db:
+  enabled: true
+  type: sqlite
+  # connection_string is loaded from GREPX_MASTER_DB_URL environment variable
+  # Ensure run.sh loads env.common before starting the server
+
+server:
+  host: 0.0.0.0
+  port: 8000
+  debug: false
+  workers: 4
+
+connection_pools:
+  default_pool_size: 10
+  default_timeout: 30
+  read_pool_size: 20
+  write_pool_size: 10
+
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

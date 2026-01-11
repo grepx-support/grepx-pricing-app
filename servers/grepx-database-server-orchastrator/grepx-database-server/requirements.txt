@@ -1,0 +1,10 @@
+pyyaml
+sqlalchemy
+psycopg2-binary
+asyncpg
+motor
+aiomysql
+aiosqlite
+fastapi
+uvicorn
+pydantic

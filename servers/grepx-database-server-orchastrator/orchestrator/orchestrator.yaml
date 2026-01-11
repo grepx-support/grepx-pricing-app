@@ -1,0 +1,28 @@
+projects:
+  grepx-database-server:
+    url: https://github.com/grepx-support/grepx-datbase-server.git
+    branch: main
+    dependencies:
+      - grepx-orm-libs
+      - grepx-connection-registry-libs
+dependencies:
+  grepx-connection-registry-libs:
+    url: https://github.com/grepx-support/grepx-connection-registry.git
+    branch: main
+    path: grepx-connection-registry
+    requirements: true
+  grepx-mongo-libs:
+    url: https://github.com/grepx-support/grepx-mongo-libs.git
+    branch: main
+    path: grepx-mongo
+    requirements: true
+  py-pg-libs:
+    url: https://grepx-admin@bitbucket.org/grepx/py-pg-libs.git
+    branch: master
+    path: py-pg
+    requirements: true
+  grepx-orm-libs:
+    url: https://github.com/grepx-support/grepx-orm-libs.git
+    branch: main
+    path: grepx-orm
+    requirements: true
