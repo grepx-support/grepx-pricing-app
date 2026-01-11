@@ -1,0 +1,7 @@
+aiosqlite
+asyncpg
+dnspython
+motor
+pip
+pymongo
+typing_extensions
