@@ -61,6 +61,13 @@ fi
 # Resolve to absolute path (create directory if needed)
 DAGSTER_HOME="$(mkdir -p "$DAGSTER_HOME" && cd "$DAGSTER_HOME" && pwd)"
 
+# Convert Git Bash path to Windows path for DAGSTER_HOME
+if [[ "$DAGSTER_HOME" == /[a-z]/* ]]; then
+    drive_letter="${DAGSTER_HOME:1:1}"
+    rest_of_path="${DAGSTER_HOME:2}"
+    DAGSTER_HOME="${drive_letter^^}:${rest_of_path}"
+fi
+
 mkdir -p "$LOG_DIR"
 export DAGSTER_HOME="$DAGSTER_HOME"
 
