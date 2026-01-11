@@ -27,6 +27,10 @@ class StorageMaster(Model):
     max_connections = IntegerField()
     timeout_seconds = IntegerField()
     description = StringField(max_length=500)
+    created_date = DateTimeField()
+    updated_date = DateTimeField()
+    created_by = StringField(max_length=100)
+    updated_by = StringField(max_length=100)
     
     @classmethod
     def get_table_name(cls) -> str:

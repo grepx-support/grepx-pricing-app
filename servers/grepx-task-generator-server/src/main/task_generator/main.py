@@ -25,7 +25,7 @@ script_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(script_dir / "main"))
 
 from task_generator.database import DatabaseManager
-from grepx_models import CeleryTask, Asset, Resource, Schedule, Sensor
+from grepx_models import CeleryTask, Asset, Resource, Schedule, Sensor, StorageMaster, StorageType
 
 
 def load_config(config_path: Path) -> dict:
@@ -38,6 +38,102 @@ def load_tasks_file(tasks_file_path: Path) -> dict:
     """Load tasks and assets from YAML file"""
     with open(tasks_file_path, 'r') as f:
         return yaml.safe_load(f)
+
+
+def populate_storage_master(db_manager: DatabaseManager, database_yaml_path: Path):
+    """Populate storage_master table from database.yaml"""
+    if not database_yaml_path.exists():
+        print(f"  WARNING: database.yaml not found at {database_yaml_path}, skipping storage initialization")
+        return 0
+
+    try:
+        with open(database_yaml_path, 'r') as f:
+            db_config = yaml.safe_load(f)
+
+        storage_configs = db_config.get('storage_configurations', [])
+        if not storage_configs:
+            print("  No storage configurations found in database.yaml")
+            return 0
+
+        count = 0
+        with db_manager.get_session() as session:
+            for config in storage_configs:
+                try:
+                    storage_name = config.get('storage_name')
+
+                    # Check if exists
+                    existing = session.query(StorageMaster).filter_by(storage_name=storage_name).first()
+
+                    # Map storage type string to enum
+                    storage_type_str = config.get('storage_type', '').lower()
+                    storage_type_map = {
+                        'mongodb': StorageType.MONGODB,
+                        'postgresql': StorageType.POSTGRESQL,
+                        'mysql': StorageType.MYSQL,
+                        'sqlite': StorageType.SQLITE,
+                        'duckdb': StorageType.DUCKDB,
+                        'csv': StorageType.CSV,
+                        'redis': StorageType.REDIS,
+                    }
+                    storage_type = storage_type_map.get(storage_type_str, StorageType.SQLITE)
+
+                    if existing:
+                        # Update existing
+                        existing.storage_type = storage_type
+                        existing.host = config.get('host')
+                        existing.port = config.get('port')
+                        existing.database_name = config.get('database_name')
+                        existing.username = config.get('username')
+                        existing.password = config.get('password')
+                        existing.connection_string = config.get('connection_string')
+                        existing.file_path = config.get('file_path')
+                        existing.auth_source = config.get('auth_source')
+                        existing.ssl_enabled = config.get('ssl_enabled', False)
+                        existing.connection_params = config.get('connection_params')
+                        existing.storage_metadata = config.get('storage_metadata')
+                        existing.is_default = config.get('is_default', False)
+                        existing.active_flag = config.get('active_flag', True)
+                        existing.max_connections = config.get('max_connections', 10)
+                        existing.timeout_seconds = config.get('timeout_seconds', 30)
+                        existing.description = config.get('description')
+                        print(f"  [~] Updated storage: {storage_name}")
+                    else:
+                        # Create new
+                        storage = StorageMaster(
+                            storage_name=storage_name,
+                            storage_type=storage_type,
+                            host=config.get('host'),
+                            port=config.get('port'),
+                            database_name=config.get('database_name'),
+                            username=config.get('username'),
+                            password=config.get('password'),
+                            connection_string=config.get('connection_string'),
+                            file_path=config.get('file_path'),
+                            auth_source=config.get('auth_source'),
+                            ssl_enabled=config.get('ssl_enabled', False),
+                            connection_params=config.get('connection_params'),
+                            storage_metadata=config.get('storage_metadata'),
+                            is_default=config.get('is_default', False),
+                            active_flag=config.get('active_flag', True),
+                            max_connections=config.get('max_connections', 10),
+                            timeout_seconds=config.get('timeout_seconds', 30),
+                            description=config.get('description')
+                        )
+                        session.add(storage)
+                        count += 1
+                        print(f"  [+] Created storage: {storage_name}")
+
+                except Exception as e:
+                    print(f"  [-] Failed to process storage '{config.get('storage_name')}': {e}")
+                    session.rollback()
+
+            session.commit()
+
+        return count
+
+    except Exception as e:
+        print(f"  [-] Error loading database.yaml: {e}")
+        return 0
 
 
 def insert_celery_tasks(db_manager: DatabaseManager, tasks: list):
@@ -234,6 +330,13 @@ def main():
     db_manager = DatabaseManager(db_url=db_url)
     db_manager.initialize_schema()
     print("Database schema initialized")
+
+    # Populate storage_master from database.yaml
+    print("\nPopulating storage_master table from database.yaml...")
+    database_yaml_path = main_dir / "resources" / "database.yaml"
+    storage_count = populate_storage_master(db_manager, database_yaml_path)
+    if storage_count > 0:
+        print(f"[OK] Created {storage_count} storage configurations\n")
     
     # Process each tasks file
     total_results = {

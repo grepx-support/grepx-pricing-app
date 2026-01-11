@@ -8,3 +8,6 @@ aiosqlite
 fastapi
 uvicorn
 pydantic
+
+-e ../libs/grepx-connection-registry
+-e ../libs/grepx-orm
