@@ -1,64 +1,64 @@
 """Simple test task for verification."""
 import logging
 import os
-import sys
-from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any
 import asyncio
 import json
-from unittest import result
+import aiohttp
 
 
 async def _store_result_to_mongodb(result: Dict[str, Any], collection_name: str = "task_results"):
     """
-    Store result to MongoDB using grepx-database-server library.
+    Store result to MongoDB using grepx-database-server API.
 
     Args:
         result: Result dictionary to store
         collection_name: MongoDB collection name (default: task_results)
+
+    Returns:
+        str: The inserted document ID
     """
-    # Lazy imports - only load when actually storing to avoid dependency issues at module load time
-    PROJECT_ROOT = Path(__file__).parent.parent.parent
-    print(f"[DEBUG] PROJECT_ROOT: {PROJECT_ROOT}")
-    os.environ['GREPX_MASTER_DB_URL'] = f"sqlite:///{PROJECT_ROOT}/data/grepx-master.db"
+    # Get API URL from environment variable with fallback to localhost:8000
+    api_base_url = os.getenv("GREPX_DATABASE_API_URL", "http://localhost:8000")
+    api_endpoint = f"{api_base_url}/write"
 
-    sys.path.insert(0, str(PROJECT_ROOT / "servers" / "grepx-database-server-orchastrator" / "grepx-database-server" / "src" / "main"))
-    sys.path.insert(0, str(PROJECT_ROOT / "servers" / "grepx-database-server-orchastrator" / "libs" / "grepx-orm" / "src"))
-    print(f"[DEBUG] sys.path updated for grepx-database-server")
-    from database_server import DatabaseServer
+    # Storage name from grepx-master.db (storage_master table)
+    storage_name = "stock_analysis_mongodb"
 
-    print(f"[DEBUG] Initializing DatabaseServer...")
-    server = DatabaseServer()
-    await server.initialize()
-    print(f"[DEBUG] DatabaseServer initialized successfully")
+    # Prepare request payload according to WriteRequest schema
+    payload = {
+        "storage_name": storage_name,
+        "model_class_name": collection_name,  # Collection name for MongoDB
+        "data": result
+    }
+
+    print(f"[DEBUG] Sending write request to {api_endpoint}")
+    print(f"[DEBUG] Payload: {json.dumps(payload, indent=2, default=str)}")
 
     try:
-        # Get MongoDB backend from write service
-        storage_name = "stock_analysis_mongodb"
+        async with aiohttp.ClientSession() as session:
+            async with session.post(api_endpoint, json=payload) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise Exception(f"API request failed with status {response.status}: {error_text}")
 
-        backend = server.write_service.get_backend(storage_name)
-        if not backend:
-            raise Exception(f"Storage '{storage_name}' not found in write service")
+                response_data = await response.json()
+                print(f"[DEBUG] API Response: {response_data}")
 
-        # Insert directly using backend.database
-        print(f"[DEBUG] Inserting into collection: {collection_name}")
-        collection = backend.database[collection_name]
-        print(f"[DEBUG] Collection obtained: {collection}")
-        document = dict(result)  
-        print(f"[DEBUG] Document to insert: {document}")
-        insert_result = await collection.insert_one(document)
+                if not response_data.get("success"):
+                    raise Exception("Write operation failed")
 
-        print(f"[DEBUG] Data inserted successfully! ID: {insert_result.inserted_id}")
-        return str(insert_result.inserted_id)
+                # Return the inserted ID
+                inserted_id = response_data.get("id")
+                return str(inserted_id) if inserted_id else "unknown"
 
+    except aiohttp.ClientError as e:
+        print(f"[ERROR] HTTP request failed: {str(e)}")
+        raise Exception(f"Failed to connect to database API at {api_base_url}: {str(e)}")
     except Exception as e:
         print(f"[ERROR] Failed to store result: {str(e)}")
         raise
-    finally:
-        print(f"[DEBUG] Shutting down DatabaseServer...")
-        await server.shutdown()
-        print(f"[DEBUG] DatabaseServer shutdown complete")
 
 
 def hello_world(name: str = "World", message: str = None, store_output: bool = False) -> Dict[str, Any]:

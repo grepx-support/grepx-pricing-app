@@ -53,13 +53,27 @@ async def query_one(request: QueryRequest):
 async def write_data(request: WriteRequest):
     if not server:
         raise HTTPException(status_code=503, detail="Server not initialized")
-    
+
     try:
-        result = await server.write_data(
-            request.storage_name,
-            request.data
-        )
-        return {"success": True, "id": result}
+        # Get the backend for this storage
+        backend = server.write_service.get_backend(request.storage_name)
+        if not backend:
+            raise ValueError(f"No backend found for storage: {request.storage_name}")
+
+        # For MongoDB backend, support raw dict writes directly to collection
+        if hasattr(backend, 'backend_name') and backend.backend_name == 'mongodb':
+            # Direct MongoDB collection write for raw dict data
+            collection = backend.database[request.model_class_name]
+            result = await collection.insert_one(request.data)
+            return {"success": True, "id": str(result.inserted_id)}
+        else:
+            # For other backends, expect Model-based writes
+            # Note: request.data should be a Model instance for non-MongoDB backends
+            result = await server.write_data(
+                request.storage_name,
+                request.data
+            )
+            return {"success": True, "id": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
