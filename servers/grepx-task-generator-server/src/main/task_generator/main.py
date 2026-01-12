@@ -26,6 +26,7 @@ sys.path.insert(0, str(script_dir / "main"))
 
 from task_generator.database import DatabaseManager
 from grepx_models import CeleryTask, Asset, Resource, Schedule, Sensor, StorageMaster, StorageType
+from grepx_models import PrefectFlow, PrefectTask, PrefectDeployment, PrefectWorkPool
 
 
 def load_config(config_path: Path) -> dict:
@@ -299,6 +300,150 @@ def insert_sensors(db_manager: DatabaseManager, sensors: list):
     return count
 
 
+def insert_prefect_work_pools(db_manager: DatabaseManager, work_pools: list):
+    """Insert Prefect work pools into database"""
+    count = 0
+    with db_manager.get_session() as session:
+        for pool_data in work_pools:
+            try:
+                existing = session.query(PrefectWorkPool).filter_by(name=pool_data['name']).first()
+                if existing:
+                    print(f"  Work pool '{pool_data['name']}' already exists, skipping...")
+                    continue
+
+                work_pool = PrefectWorkPool(
+                    name=pool_data['name'],
+                    description=pool_data.get('description'),
+                    pool_type=pool_data.get('pool_type', 'process'),
+                    config=pool_data.get('config', {}),
+                    concurrency_limit=pool_data.get('concurrency_limit', 10),
+                    is_active=pool_data.get('is_active', True),
+                    created_at=datetime.now()
+                )
+                session.add(work_pool)
+                count += 1
+                print(f"  [+] Created Prefect work pool: {pool_data['name']}")
+            except Exception as e:
+                print(f"  [-] Failed to create work pool '{pool_data['name']}': {e}")
+                session.rollback()
+
+        session.commit()
+    return count
+
+
+def insert_prefect_flows(db_manager: DatabaseManager, flows: list):
+    """Insert Prefect flows into database"""
+    count = 0
+    with db_manager.get_session() as session:
+        for flow_data in flows:
+            try:
+                existing = session.query(PrefectFlow).filter_by(name=flow_data['name']).first()
+                if existing:
+                    print(f"  Flow '{flow_data['name']}' already exists, skipping...")
+                    continue
+
+                flow = PrefectFlow(
+                    name=flow_data['name'],
+                    description=flow_data.get('description'),
+                    flow_type=flow_data.get('flow_type'),
+                    tags=flow_data.get('tags', []),
+                    is_active=flow_data.get('is_active', True),
+                    created_at=datetime.now()
+                )
+                session.add(flow)
+                count += 1
+                print(f"  [+] Created Prefect flow: {flow_data['name']}")
+            except Exception as e:
+                print(f"  [-] Failed to create flow '{flow_data['name']}': {e}")
+                session.rollback()
+
+        session.commit()
+    return count
+
+
+def insert_prefect_tasks(db_manager: DatabaseManager, tasks: list):
+    """Insert Prefect tasks into database"""
+    count = 0
+    with db_manager.get_session() as session:
+        for task_data in tasks:
+            try:
+                existing = session.query(PrefectTask).filter_by(name=task_data['name']).first()
+                if existing:
+                    print(f"  Task '{task_data['name']}' already exists, skipping...")
+                    continue
+
+                # Get flow_id from flow_name
+                flow = session.query(PrefectFlow).filter_by(name=task_data['flow_name']).first()
+                if not flow:
+                    print(f"  [-] Flow '{task_data['flow_name']}' not found for task '{task_data['name']}', skipping...")
+                    continue
+
+                task = PrefectTask(
+                    name=task_data['name'],
+                    description=task_data.get('description'),
+                    flow_id=flow.id,
+                    celery_task_name=task_data['celery_task_name'],
+                    task_args=task_data.get('task_args', []),
+                    task_kwargs=task_data.get('task_kwargs', {}),
+                    depends_on=task_data.get('depends_on', []),
+                    tags=task_data.get('tags', []),
+                    retry_config=task_data.get('retry_config', {}),
+                    timeout_seconds=task_data.get('timeout_seconds', 300),
+                    is_active=task_data.get('is_active', True),
+                    created_at=datetime.now()
+                )
+                session.add(task)
+                count += 1
+                print(f"  [+] Created Prefect task: {task_data['name']}")
+            except Exception as e:
+                print(f"  [-] Failed to create task '{task_data['name']}': {e}")
+                session.rollback()
+
+        session.commit()
+    return count
+
+
+def insert_prefect_deployments(db_manager: DatabaseManager, deployments: list):
+    """Insert Prefect deployments into database"""
+    count = 0
+    with db_manager.get_session() as session:
+        for deployment_data in deployments:
+            try:
+                existing = session.query(PrefectDeployment).filter_by(name=deployment_data['name']).first()
+                if existing:
+                    print(f"  Deployment '{deployment_data['name']}' already exists, skipping...")
+                    continue
+
+                # Get flow_id from flow_name
+                flow = session.query(PrefectFlow).filter_by(name=deployment_data['flow_name']).first()
+                if not flow:
+                    print(f"  [-] Flow '{deployment_data['flow_name']}' not found for deployment '{deployment_data['name']}', skipping...")
+                    continue
+
+                deployment = PrefectDeployment(
+                    name=deployment_data['name'],
+                    description=deployment_data.get('description'),
+                    flow_id=flow.id,
+                    work_pool_name=deployment_data['work_pool_name'],
+                    work_queue_name=deployment_data.get('work_queue_name', 'default'),
+                    schedule_type=deployment_data.get('schedule_type'),
+                    schedule_config=deployment_data.get('schedule_config', {}),
+                    parameters=deployment_data.get('parameters', {}),
+                    tags=deployment_data.get('tags', []),
+                    is_active=deployment_data.get('is_active', True),
+                    created_at=datetime.now()
+                )
+                session.add(deployment)
+                count += 1
+                print(f"  [+] Created Prefect deployment: {deployment_data['name']}")
+            except Exception as e:
+                print(f"  [-] Failed to create deployment '{deployment_data['name']}': {e}")
+                session.rollback()
+
+        session.commit()
+    return count
+
+
 def main():
     """Main execution"""
     # Get script directory (src/main/task_generator/main.py -> src/main/)
@@ -344,7 +489,11 @@ def main():
         'assets': 0,
         'resources': 0,
         'schedules': 0,
-        'sensors': 0
+        'sensors': 0,
+        'prefect_work_pools': 0,
+        'prefect_flows': 0,
+        'prefect_tasks': 0,
+        'prefect_deployments': 0
     }
     
     for tasks_file in tasks_files:
@@ -371,7 +520,11 @@ def main():
             'assets': 0,
             'resources': 0,
             'schedules': 0,
-            'sensors': 0
+            'sensors': 0,
+            'prefect_work_pools': 0,
+            'prefect_flows': 0,
+            'prefect_tasks': 0,
+            'prefect_deployments': 0
         }
         
         if 'celery_tasks' in tasks_data:
@@ -393,7 +546,24 @@ def main():
         if 'dagster_sensors' in tasks_data:
             print("\nInserting Dagster sensors...")
             results['sensors'] = insert_sensors(db_manager, tasks_data['dagster_sensors'])
-        
+
+        # Handle Prefect items (must be created in order: work_pools -> flows -> tasks -> deployments)
+        if 'prefect_work_pools' in tasks_data:
+            print("\nInserting Prefect work pools...")
+            results['prefect_work_pools'] = insert_prefect_work_pools(db_manager, tasks_data['prefect_work_pools'])
+
+        if 'prefect_flows' in tasks_data:
+            print("\nInserting Prefect flows...")
+            results['prefect_flows'] = insert_prefect_flows(db_manager, tasks_data['prefect_flows'])
+
+        if 'prefect_tasks' in tasks_data:
+            print("\nInserting Prefect tasks...")
+            results['prefect_tasks'] = insert_prefect_tasks(db_manager, tasks_data['prefect_tasks'])
+
+        if 'prefect_deployments' in tasks_data:
+            print("\nInserting Prefect deployments...")
+            results['prefect_deployments'] = insert_prefect_deployments(db_manager, tasks_data['prefect_deployments'])
+
         # Update totals
         for key in total_results:
             total_results[key] += results[key]
@@ -406,6 +576,10 @@ def main():
     print(f"Total Dagster resources created: {total_results['resources']}")
     print(f"Total Dagster schedules created: {total_results['schedules']}")
     print(f"Total Dagster sensors created: {total_results['sensors']}")
+    print(f"Total Prefect work pools created: {total_results['prefect_work_pools']}")
+    print(f"Total Prefect flows created: {total_results['prefect_flows']}")
+    print(f"Total Prefect tasks created: {total_results['prefect_tasks']}")
+    print(f"Total Prefect deployments created: {total_results['prefect_deployments']}")
     print(f"\nGrand Total: {sum(total_results.values())} items created")
     print("\n[OK] Task generation complete!")
     

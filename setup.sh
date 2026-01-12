@@ -27,12 +27,17 @@ if [ "${1:-}" = "clean" ]; then
     cd servers/grepx-dagster-server
     ./setup.sh clean
     cd ../..
-    
+
+    echo "Cleaning prefect server..."
+    cd servers/grepx-prefect-server
+    ./setup.sh clean
+    cd ../..
+
     echo "Cleaning task generator server..."
     cd servers/grepx-task-generator-server
     ./setup.sh clean
     cd ../..
-    
+
     echo ""
     echo "=== Clean complete ==="
     echo "Run ./setup.sh to reinstall all components"
@@ -100,6 +105,11 @@ cd ../..
 
 echo "Setting up dagster server..."
 cd servers/grepx-dagster-server
+./setup.sh
+cd ../..
+
+echo "Setting up prefect server..."
+cd servers/grepx-prefect-server
 ./setup.sh
 cd ../..
 

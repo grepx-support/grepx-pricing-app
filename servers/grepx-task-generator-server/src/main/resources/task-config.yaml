@@ -9,5 +9,6 @@
 tasks_files:
   - "resources/pricing_tasks.yaml"
   - "resources/test_tasks.yaml"
+  - "resources/prefect_demo_flow.yaml"
 
 
