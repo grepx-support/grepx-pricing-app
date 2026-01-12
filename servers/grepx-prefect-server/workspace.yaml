@@ -1,0 +1,30 @@
+# Prefect Workspace Configuration
+# ===============================
+# Defines the workspace for the Prefect server
+
+workspaces:
+  - name: "grepx-pricing-workspace"
+    path: "./src/main/prefect_app"
+    description: "Grepx Pricing Application Prefect Workspace"
+    
+    # Configuration for flows in this workspace
+    flows:
+      module: "prefect_app.flows"
+      patterns:
+        - "**/*flow*.py"
+        - "**/*etl*.py"
+        - "**/*pipeline*.py"
+    
+    # Configuration for deployments
+    deployments:
+      path: "./src/main/prefect_app/deployments"
+      patterns:
+        - "**/deploy*.py"
+        - "**/*deployment*.py"
+    
+    # Work pools associated with this workspace
+    work_pools:
+      - name: "price-pool"
+        type: "process"
+        description: "Work pool for price processing flows"
+        default_queue: true

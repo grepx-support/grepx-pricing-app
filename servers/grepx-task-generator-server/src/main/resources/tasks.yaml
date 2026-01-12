@@ -193,3 +193,48 @@ sensors:
     minimum_interval_seconds: 300
     is_active: true
 
+prefect_artifacts:
+  - name: etl_price_flow
+    description: ETL flow for processing price data
+    group_name: stocks
+    artifact_type: etl
+    entrypoint: prefect_app.flows.etl_price_flow:process_price_data
+    dependencies: []
+    config: {}
+    deployment_name: etl-price-deployment
+    work_pool_name: price-pool
+    parameters: {}
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: indicator_calculation_flow
+    description: Flow for calculating technical indicators
+    group_name: indicators
+    artifact_type: analytics
+    entrypoint: prefect_app.flows.indicator_flow:calculate_indicators
+    dependencies: [etl_price_flow]
+    config: {}
+    deployment_name: indicator-calculation-deployment
+    work_pool_name: price-pool
+    parameters: {}
+    partition_type: daily
+    partition_config:
+      cron: "0 6 * * *"
+    is_active: true
+
+  - name: portfolio_analysis_flow
+    description: Flow for portfolio analysis
+    group_name: analytics
+    artifact_type: analytics
+    entrypoint: prefect_app.flows.portfolio_flow:analyze_portfolio
+    dependencies: [indicator_calculation_flow]
+    config: {}
+    deployment_name: portfolio-analysis-deployment
+    work_pool_name: price-pool
+    parameters: {}
+    partition_type: weekly
+    partition_config:
+      cron: "0 8 * * 1"
+    is_active: true
+

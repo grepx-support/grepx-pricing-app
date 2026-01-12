@@ -11,3 +11,6 @@ pyyaml==6.0.2
 # Dagster (for ConfigurableResource base class)
 dagster==1.9.13
 
+# Prefect (for flow/deployment generation)
+prefect>=3.0.0
+

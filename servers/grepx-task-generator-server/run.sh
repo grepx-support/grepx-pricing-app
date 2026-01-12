@@ -41,10 +41,58 @@ run_generator() {
     python src/main/task_generator/main.py | tee "$LOG_DIR/${SERVER_NAME}_${DATE}.log"
 }
 
+###########################################################
+# Prefect helpers (analogous to Dagster side)
+###########################################################
+
+run_prefect_server() {
+  echo "Starting Prefect server..."
+  activate_venv
+  cd "$PROJECT_ROOT"          # usually Prefect runs from project root
+  prefect server start
+}
+
+run_prefect_worker() {
+  # WORK_POOL_NAME can come from env.common (e.g. PRICE_POOL_NAME)
+  local POOL="${1:-price-pool}"
+  echo "Starting Prefect worker for pool: $POOL"
+  activate_venv
+  cd "$PROJECT_ROOT"
+  prefect worker start --pool "$POOL"
+}
+
+run_prefect_deploy() {
+  echo "Running Prefect deployments (reading from database)..."
+  activate_venv
+  cd "$SCRIPT_DIR"
+  python src/main/task_generator/prefect_deployer.py
+}
+
 case "${1:-run}" in
-    start|run) run_generator ;;
-    stop) echo "$SERVER_NAME is not a service" ;;
-    restart) run_generator ;;
-    status) echo "$SERVER_NAME is not a service" ;;
-    *) echo "Usage: $0 {start|stop|restart|status|run}"; exit 1 ;;
+    start|run)
+        run_generator
+        ;;
+    prefect-server)
+        run_prefect_server
+        ;;
+    prefect-worker)
+        # optional: ./run.sh prefect-worker price-pool
+        run_prefect_worker "${2:-price-pool}"
+        ;;
+    prefect-deploy)
+        run_prefect_deploy
+        ;;
+    stop)
+        echo "$SERVER_NAME is not a service"
+        ;;
+    restart)
+        run_generator
+        ;;
+    status)
+        echo "$SERVER_NAME is not a service"
+        ;;
+    *)
+        echo "Usage: $0 {start|run|prefect-server|prefect-worker|prefect-deploy|stop|restart|status}"
+        exit 1
+        ;;
 esac

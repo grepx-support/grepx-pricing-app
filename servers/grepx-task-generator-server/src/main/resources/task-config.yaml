@@ -3,7 +3,7 @@
 # This file configures the task generator
 
 database:
-  db_url: "sqlite:////Users/mahesh/Desktop/grepx-pricing-app/servers/grepx-dagster-server/dagster_config_orm.db"
+  db_url: "sqlite:///../grepx-dagster-server/dagster_config_orm.db"
 
 # Path to file containing tasks and assets definitions
 tasks_file: "resources/tasks.yaml"

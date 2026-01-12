@@ -8,19 +8,19 @@ from dagster import ConfigurableResource
 from typing import Dict, Any, List, Optional
 
 # Import models from shared package
-from grepx_models import Base, Asset, Resource, Schedule, Sensor, AssetMetadata, CeleryTask
+from grepx_models import Base, Asset, Resource, Schedule, Sensor, AssetMetadata, CeleryTask, PrefectArtifact
 
 
 class DatabaseManager(ConfigurableResource):
     """Database Manager using SQLAlchemy ORM"""
     
-    db_url: str = "sqlite:///C:/Users/USER/development/grepx-pricing-app/data/dagster_config_orm.db"
+    db_url: str = "sqlite:///../grepx-dagster-server/dagster_config_orm.db"
 
     def __init__(self, **kwargs):
         # Pass db_url to parent ConfigurableResource initialization
         # If db_url not provided, use default
         if 'db_url' not in kwargs:
-            kwargs['db_url'] = "sqlite:///C:/Users/USER/development/grepx-pricing-app/data/dagster_config_orm.db"
+            kwargs['db_url'] = "sqlite:///../grepx-dagster-server/dagster_config_orm.db"
         # Call parent init first to set db_url properly
         super().__init__(**kwargs)
         # Now initialize engine (db_url is accessible as self.db_url from parent)
@@ -78,6 +78,12 @@ class DatabaseManager(ConfigurableResource):
         """Get all active Celery tasks"""
         with self.get_session() as session:
             stmt = select(CeleryTask).where(CeleryTask.is_active == True)
+            return list(session.scalars(stmt).all())
+
+    def get_prefect_artifacts(self) -> List[PrefectArtifact]:
+        """Get all active Prefect artifacts"""
+        with self.get_session() as session:
+            stmt = select(PrefectArtifact).where(PrefectArtifact.is_active == True)
             return list(session.scalars(stmt).all())
 
     def save_asset_metadata(self, asset_name: str, run_id: str, task_id: Optional[str], metadata: Dict[str, Any]):
