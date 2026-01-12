@@ -2,7 +2,7 @@
 Resource Factory for creating dynamic Dagster resources
 """
 from dagster import ConfigurableResource
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 import pandas as pd
 from pathlib import Path
 from ..task_client import TaskClient
@@ -20,16 +20,21 @@ class DynamicResourceFactory:
             resource_type = resource_config.resource_type
             config = resource_config.config if resource_config.config else {}
         
-        if resource_type == 'task_client':
+        # Normalize resource type to lowercase for comparison
+        resource_type_lower = resource_type.lower() if resource_type else ''
+        
+        if resource_type_lower in ['task_client', 'taskclient']:
             class TaskClientResource(ConfigurableResource):
                 broker_url: str = "redis://localhost:6379/0"
+                backend_url: Optional[str] = None
+                task_timeout: Optional[int] = 60
                 
                 def get_client(self) -> TaskClient:
                     return TaskClient(broker_url=self.broker_url)
             
             return TaskClientResource(**config)
         
-        elif resource_type == 'database':
+        elif resource_type_lower == 'database':
             class DatabaseResource(ConfigurableResource):
                 connection_string: str
                 
@@ -50,12 +55,12 @@ class DynamicResourceFactory:
             
             return DatabaseResource(**config)
         
-        elif resource_type == 'api':
+        elif resource_type_lower == 'api':
             class APIResource(ConfigurableResource):
                 base_url: str
                 api_key: Optional[str] = None
                 
-                def get(self, endpoint: str) -> Dict:
+                def get(self, endpoint: str) -> Dict[str, Any]:
                     import requests
                     headers = {}
                     if self.api_key:
@@ -63,7 +68,7 @@ class DynamicResourceFactory:
                     response = requests.get(f"{self.base_url}/{endpoint}", headers=headers)
                     return response.json()
                 
-                def post(self, endpoint: str, data: Dict) -> Dict:
+                def post(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
                     import requests
                     headers = {}
                     if self.api_key:
@@ -73,7 +78,7 @@ class DynamicResourceFactory:
             
             return APIResource(**config)
         
-        elif resource_type == 'file_system':
+        elif resource_type_lower == 'file_system':
             class FileSystemResource(ConfigurableResource):
                 base_path: str
                 
@@ -93,8 +98,10 @@ class DynamicResourceFactory:
             return FileSystemResource(**config)
         
         else:
+            # For generic/unknown resource types, just return a simple resource
+            # We use dict (lowercase) instead of Dict to avoid type inference issues
             class GenericResource(ConfigurableResource):
-                config_data: Dict = {}
+                config_data: dict = {}
             
             return GenericResource(config_data=config)
 

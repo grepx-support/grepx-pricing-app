@@ -13,6 +13,16 @@ def create_app(cfg: DictConfig) -> Celery:
     """Create Celery app."""
     logger.info(f"Creating: {cfg.app.name}")
 
+    # Add project root to Python path
+    # This allows importing business-tasks as business.tasks (dots replace hyphens)
+    project_root = Path(__file__).parent.parent.parent.parent.parent.parent
+    business_tasks_dir = project_root / "business-tasks"
+    
+    for path in [str(business_tasks_dir), str(project_root)]:
+        if path not in sys.path:
+            sys.path.insert(0, path)
+            logger.info(f"Added to Python path: {path}")
+
     celery_app = Celery(cfg.app.name)
     celery_app.conf.update(
         broker_url=cfg.celery.broker_url,
