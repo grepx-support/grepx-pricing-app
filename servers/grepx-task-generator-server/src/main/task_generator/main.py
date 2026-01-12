@@ -25,7 +25,7 @@ script_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(script_dir / "main"))
 
 from task_generator.database import DatabaseManager
-from grepx_models import CeleryTask, Asset, Resource, Schedule, Sensor
+from grepx_models import CeleryTask, Asset, Resource, Schedule, Sensor, PrefectArtifact
 
 
 def load_config(config_path: Path) -> dict:
@@ -203,6 +203,45 @@ def insert_sensors(db_manager: DatabaseManager, sensors: list):
     return count
 
 
+def insert_prefect_artifacts(db_manager: DatabaseManager, artifacts: list):
+    """Insert Prefect artifacts into database"""
+    count = 0
+    with db_manager.get_session() as session:
+        for artifact_data in artifacts:
+            try:
+                # Check if exists
+                existing = session.query(PrefectArtifact).filter_by(name=artifact_data['name']).first()
+                if existing:
+                    print(f"  Prefect artifact '{artifact_data['name']}' already exists, skipping...")
+                    continue
+                
+                artifact = PrefectArtifact(
+                    name=artifact_data['name'],
+                    description=artifact_data.get('description', ''),
+                    group_name=artifact_data.get('group_name'),
+                    artifact_type=artifact_data.get('artifact_type'),
+                    dependencies=artifact_data.get('dependencies', []),
+                    config=artifact_data.get('config', {}),
+                    entrypoint=artifact_data['entrypoint'],
+                    deployment_name=artifact_data.get('deployment_name'),
+                    work_pool_name=artifact_data.get('work_pool_name'),
+                    parameters=artifact_data.get('parameters', {}),
+                    partition_type=artifact_data.get('partition_type'),
+                    partition_config=artifact_data.get('partition_config', {}),
+                    is_active=artifact_data.get('is_active', True),
+                    created_at=datetime.now()
+                )
+                session.add(artifact)
+                count += 1
+                print(f"  [+] Created Prefect artifact: {artifact_data['name']}")
+            except Exception as e:
+                print(f"  [-] Failed to create Prefect artifact '{artifact_data['name']}': {e}")
+                session.rollback()
+        
+        session.commit()
+    return count
+
+
 def main():
     """Main execution"""
     # Get script directory (src/main/task_generator/main.py -> src/main/)
@@ -241,7 +280,8 @@ def main():
         'assets': 0,
         'resources': 0,
         'schedules': 0,
-        'sensors': 0
+        'sensors': 0,
+        'prefect_artifacts': 0
     }
     
     for tasks_file in tasks_files:
@@ -326,6 +366,10 @@ def main():
         print("\nSensors:")
         results['sensors'] = insert_sensors(db_manager, tasks_data['sensors'])
     
+    if 'prefect_artifacts' in tasks_data:
+        print("\nPrefect Artifacts:")
+        results['prefect_artifacts'] = insert_prefect_artifacts(db_manager, tasks_data['prefect_artifacts'])
+    
     # Summary
     print("\n=== Summary ===")
     print(f"Celery Tasks: {results['celery_tasks']} created")
@@ -333,6 +377,7 @@ def main():
     print(f"Resources: {results['resources']} created")
     print(f"Schedules: {results['schedules']} created")
     print(f"Sensors: {results['sensors']} created")
+    print(f"Prefect Artifacts: {results['prefect_artifacts']} created")
     print("==============================\n")
 
 

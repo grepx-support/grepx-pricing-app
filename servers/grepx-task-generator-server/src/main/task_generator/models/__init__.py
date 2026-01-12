@@ -7,6 +7,7 @@ from .schedule import Schedule
 from .sensor import Sensor
 from .asset_metadata import AssetMetadata
 from .celery_task import CeleryTask
+from .prefect_asset import PrefectArtifact
 from .base import Base
 
 __all__ = [
@@ -16,6 +17,7 @@ __all__ = [
     'Sensor',
     'AssetMetadata',
     'CeleryTask',
+    'PrefectArtifact',
     'Base',
 ]
 

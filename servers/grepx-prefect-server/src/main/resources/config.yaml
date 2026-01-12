@@ -1,0 +1,61 @@
+# Prefect Server Configuration
+# ===========================
+
+server:
+  database:
+    connection_url: "sqlite+aiosqlite:///prefect_server.db"
+    # For PostgreSQL: "postgresql+asyncpg://user:password@localhost:5432/prefect"
+    # For MySQL: "mysql+aiomysql://user:password@localhost:3306/prefect"
+  
+  api:
+    host: "127.0.0.1"
+    port: 4200
+    # Allow connections from other hosts
+    # host: "0.0.0.0"
+  
+  ui:
+    enabled: true
+    base_url: "http://localhost:4200"
+
+  # Path to flows and deployments
+  flows_path: "./flows"
+  deployments_path: "./deployments"
+
+# Work pools configuration
+work_pools:
+  default_pool:
+    name: "default-agent-pool"
+    type: "process"
+    description: "Default work pool for Prefect agents"
+  
+  price_pool:
+    name: "price-pool"
+    type: "process"
+    description: "Work pool for price processing flows"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    console:
+      enabled: true
+    file:
+      enabled: true
+      filename: "prefect_server.log"
+
+# Database configuration for connections
+database:
+  default_backend: "sqlite"
+  backends:
+    sqlite:
+      connection_string: "sqlite:///./prefect_data.db"
+    postgresql:
+      host: "localhost"
+      port: 5432
+      username: "prefect"
+      password: "prefect"
+      database: "prefect_db"
+    mongodb:
+      connection_string: "mongodb://localhost:27017/"
+      database_name: "prefect_data"

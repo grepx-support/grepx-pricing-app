@@ -5,36 +5,29 @@ set -euo pipefail
 
 VENV_DIR="venv"
 
-# Load common environment variables
-if [ -f ../../env.common ]; then
-    source ../../env.common
-fi
+# Function to find Python executable
+find_python() {
+    # Check for various Python executable names, including Windows-specific ones
+    for py_version in python3.12 python3.11 python3.10 python3.9 python3 python py; do
+        if command -v "$py_version" >/dev/null 2>&1; then
+            # Test if the command actually works
+            if "$py_version" --version >/dev/null 2>&1; then
+                echo "$py_version"
+                return 0
+            fi
+        fi
+    done
+    echo "ERROR: No working Python interpreter found" >&2
+    exit 1
+}
 
-# Default Python version if not set
-PYTHON_VERSION=${PYTHON_VERSION:-python3.12}
-
-# Handle clean option
-if [ "${1:-}" = "clean" ]; then
-    echo "Cleaning grepx-task-generator-server..."
-    if [ -d "$VENV_DIR" ]; then
-        echo "Removing virtual environment..."
-        rm -rf "$VENV_DIR"
-        echo "Clean complete."
-    else
-        echo "No virtual environment found."
-    fi
-    exit 0
-fi
-
-echo "Setting up grepx-task-generator-server..."
-echo "Using Python: $PYTHON_VERSION"
+PYTHON_CMD=$(find_python)
+echo "Using Python interpreter: $PYTHON_CMD"
 
 # Create virtual environment if missing
 if [ ! -d "$VENV_DIR" ]; then
     echo "Creating virtual environment..."
-    $PYTHON_VERSION -m venv "$VENV_DIR"
-else
-    echo "Virtual environment already exists, skipping creation..."
+    "$PYTHON_CMD" -m venv "$VENV_DIR"
 fi
 
 # Cross-platform activation
@@ -50,11 +43,9 @@ fi
 source "$ACTIVATE_PATH"
 
 # Upgrade pip
-echo "Upgrading pip..."
-$PYTHON_VERSION -m pip install --upgrade pip
+"$PYTHON_CMD" -m pip install --upgrade pip
 
 # Install dependencies
-echo "Installing dependencies..."
 pip install -r requirements.txt
 
 echo "Setup complete. You can now run ./run.sh"

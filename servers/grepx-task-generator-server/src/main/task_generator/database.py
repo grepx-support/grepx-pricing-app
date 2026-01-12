@@ -9,7 +9,7 @@ from dagster import ConfigurableResource
 from typing import Dict, Any, List, Optional
 
 # Import models from shared package
-from grepx_models import Base, Asset, Resource, Schedule, Sensor, AssetMetadata, CeleryTask
+from grepx_models import Base, Asset, Resource, Schedule, Sensor, AssetMetadata, CeleryTask, PrefectArtifact
 
 
 class DatabaseManager(ConfigurableResource):
@@ -88,6 +88,12 @@ class DatabaseManager(ConfigurableResource):
             stmt = select(CeleryTask).where(CeleryTask.is_active == True)
             return list(session.scalars(stmt).all())
 
+    def get_prefect_artifacts(self) -> List[PrefectArtifact]:
+        """Get all active Prefect artifacts"""
+        with self.get_session() as session:
+            stmt = select(PrefectArtifact).where(PrefectArtifact.is_active == True)
+            return list(session.scalars(stmt).all())
+
     def save_asset_metadata(self, asset_name: str, run_id: str, task_id: Optional[str], metadata: Dict[str, Any]):
         """Save metadata for an asset run"""
         with self.get_session() as session:
@@ -123,4 +129,3 @@ class DatabaseManager(ConfigurableResource):
             except IntegrityError:
                 session.rollback()
                 return False
-

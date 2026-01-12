@@ -1,8 +1,7 @@
 #!/bin/bash
+# setup.sh - Setup Prefect server
 
 set -euo pipefail
-
-echo "Setting up grepx-shared-models..."
 
 VENV_DIR="venv"
 
@@ -43,12 +42,10 @@ fi
 
 source "$ACTIVATE_PATH"
 
-# Upgrade pip / setuptools / wheel
-"$PYTHON_CMD" -m pip install --upgrade pip setuptools wheel
+# Upgrade pip
+"$PYTHON_CMD" -m pip install --upgrade pip
 
-# Install project dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-
-echo "grepx-shared-models setup complete"
-
+echo "Setup complete. You can now run ./run.sh"

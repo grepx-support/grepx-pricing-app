@@ -1,7 +1,7 @@
 """
 Asset model definition
 """
-from sqlalchemy import Column, Integer, String, Boolean, Text, TIMESTAMP, JSON
+from sqlalchemy import Column, Integer, String, Boolean, Text, TIMESTAMP, JSON, and_
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -24,5 +24,6 @@ class Asset(Base):
     partition_config = Column(JSON, default={})
     is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP)
-    metadata_records = relationship("AssetMetadata", back_populates="asset")
+    # Note: Relationship to AssetMetadata removed to avoid configuration conflicts
+    # Use manual queries to access related metadata records
 

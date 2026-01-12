@@ -2,12 +2,11 @@
 # ============================
 # This file configures the task generator
 
-# Note: Database URL is read from GREPX_MASTER_DB_URL environment variable
-# Make sure env.common is loaded before running this script
+# Database URL - uses environment variable if available, otherwise defaults to local path
+# Set GREPX_MASTER_DB_URL environment variable to override
 
-# Path to files containing tasks and assets definitions
-tasks_files:
-  - "resources/pricing_tasks.yaml"
-  - "resources/test_tasks.yaml"
+database:
+  db_url: "${GREPX_MASTER_DB_URL:-sqlite:///../grepx-dagster-server/dagster_config_orm.db}"
 
-
+# Path to file containing tasks and assets definitions
+tasks_file: "resources/tasks.yaml"
