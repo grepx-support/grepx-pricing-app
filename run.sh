@@ -53,17 +53,11 @@ cd servers/grepx-dagster-server
 ./run.sh $COMMAND
 cd ../..
 
-echo "Managing prefect server: $COMMAND"
-cd servers/grepx-prefect-server
-./run.sh $COMMAND
-cd ../..
-
 if [ "$COMMAND" = "start" ]; then
     echo ""
     echo "=== All servers started ==="
     echo "Database Server: http://localhost:${DB_SERVER_PORT:-8000}"
     echo "Dagster UI: http://localhost:${DAGSTER_PORT:-3000}"
-    echo "Prefect UI: http://localhost:4200"
     echo "Flower UI: http://localhost:${FLOWER_PORT:-5555}"
     echo "Master Database: ${GREPX_MASTER_DB_URL:-./data/grepx-master.db}"
 elif [ "$COMMAND" = "stop" ]; then

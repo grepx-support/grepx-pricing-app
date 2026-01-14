@@ -1,16 +1,15 @@
 """
-Main Task Generator - Orchestrates Celery task, Dagster asset, and Prefect flow generation
+Main Task Generator - Orchestrates Celery task, Dagster asset
 """
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from .celery_task_generator import CeleryTaskGenerator
 from .dagster_asset_generator import DagsterAssetGenerator
-from .prefect_flow_generator import PrefectFlowGenerator
 
 
 class TaskGenerator:
     """
-    Main task generator that creates Celery tasks, Dagster assets, and Prefect flows
+    Main task generator that creates Celery tasks, Dagster assets
     """
 
     def __init__(self, db_manager):
@@ -23,11 +22,10 @@ class TaskGenerator:
         self.db_manager = db_manager
         self.celery_generator = CeleryTaskGenerator(db_manager)
         self.asset_generator = DagsterAssetGenerator(db_manager)
-        self.prefect_generator = PrefectFlowGenerator(db_manager)
     
     def generate_from_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate tasks, assets, and Prefect flows from a configuration dictionary
+        Generate tasks, assets from a configuration dictionary
 
         Args:
             config: Configuration dict with structure:
@@ -36,11 +34,7 @@ class TaskGenerator:
                     'assets': [...],
                     'resources': [...],
                     'schedules': [...],
-                    'sensors': [...],
-                    'prefect_flows': [...],
-                    'prefect_tasks': [...],
-                    'prefect_deployments': [...],
-                    'prefect_work_pools': [...]
+                    'sensors': [...]
                 }
 
         Returns:
@@ -51,11 +45,7 @@ class TaskGenerator:
             'assets': 0,
             'resources': 0,
             'schedules': 0,
-            'sensors': 0,
-            'prefect_flows': 0,
-            'prefect_tasks': 0,
-            'prefect_deployments': 0,
-            'prefect_work_pools': 0
+            'sensors': 0
         }
 
         # Generate Celery tasks
@@ -88,30 +78,7 @@ class TaskGenerator:
                 if self._create_sensor(sensor_config):
                     results['sensors'] += 1
 
-        # Generate Prefect work pools (must be created before deployments)
-        if 'prefect_work_pools' in config:
-            for pool_config in config['prefect_work_pools']:
-                if self.prefect_generator.create_work_pool(**pool_config):
-                    results['prefect_work_pools'] += 1
-
-        # Generate Prefect flows (must be created before tasks and deployments)
-        if 'prefect_flows' in config:
-            for flow_config in config['prefect_flows']:
-                if self.prefect_generator.create_flow(**flow_config):
-                    results['prefect_flows'] += 1
-
-        # Generate Prefect tasks (must be created after flows)
-        if 'prefect_tasks' in config:
-            for task_config in config['prefect_tasks']:
-                if self.prefect_generator.create_task(**task_config):
-                    results['prefect_tasks'] += 1
-
-        # Generate Prefect deployments (must be created after flows and work pools)
-        if 'prefect_deployments' in config:
-            for deployment_config in config['prefect_deployments']:
-                if self.prefect_generator.create_deployment(**deployment_config):
-                    results['prefect_deployments'] += 1
-
+     
         return results
     
     def _create_resource(self, config: Dict[str, Any]) -> bool:
