@@ -4,6 +4,7 @@ import logging
 from typing import Dict, List
 from config.config_loader import ConfigLoader
 from dbManager import BaseMasterDBManager
+from dbManager.storage_initializer import StorageInitializer
 from services.read_service import ReadService
 from services.write_service import WriteService
 from backends.discovery import discover_backends
@@ -25,15 +26,24 @@ class DatabaseServer:
     
     async def initialize(self):
         self.logger.info("Initializing Database Server...")
-        
+
         discover_backends()
-        
+
         master_config = self.config.get_master_db_config()
         self.master_db = BaseMasterDBManager(master_config)
         await self.master_db.connect()
-        
+
         self.logger.info(f"Master DB connected (Type: {master_config.get('type')})")
-        
+
+        # Auto-populate storage_master from database.yaml
+        self.logger.info("Populating storage_master table from database.yaml...")
+        try:
+            storage_init = StorageInitializer(self.master_db.session)
+            await storage_init.populate_storage_master()
+            self.logger.info("Storage configurations populated successfully")
+        except Exception as e:
+            self.logger.warning(f"Could not populate storage_master from database.yaml: {e}")
+
         storages = await self.master_db.get_all_active_storages()
         self.logger.info(f"Found {len(storages)} active storage configurations")
         
@@ -45,11 +55,11 @@ class DatabaseServer:
     async def _register_storage_connections(self, storage: Dict):
         try:
             storage_name = storage.get('storage_name')
-            storage_type = storage.get('storage_type')
+            storage_type = storage.get('storage_type').lower()
             
             self.logger.info(f"Registering storage: {storage_name} (Type: {storage_type})")
             
-            backend_class = get_backend_class(storage_type)
+            backend_class = get_backend_class(storage_type.lower())
             connection_params = self._build_connection_params(storage)
             
             read_backend = backend_class()
@@ -94,7 +104,12 @@ class DatabaseServer:
         
         connection_params = storage.get('connection_params')
         if connection_params:
-            params.update(connection_params)
+            if isinstance(connection_params, dict):
+                params.update(connection_params)
+            else:
+                self.logger.warning(
+            f"connection_params for storage '{storage.get('storage_name')}' is not a dict, skipping."
+        )
         
         return params
     

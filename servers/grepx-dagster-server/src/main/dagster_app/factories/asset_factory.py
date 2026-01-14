@@ -60,6 +60,8 @@ class DynamicAssetFactory:
 
                 context.log.info(f"Submitting Celery task: {celery_task_name}")
                 context.log.info(f"Task args: {task_args}")
+                context.log.info(f"Task kwargs: {task_kwargs}")
+                context.log.info(f"Combined kwargs: {combined_kwargs}")
                 context.log.info(f"Task kwargs keys: {list(combined_kwargs.keys())}")
                 context.log.info(f"Dependencies received: {list(deps.keys())}")
 

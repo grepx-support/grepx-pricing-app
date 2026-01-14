@@ -43,6 +43,7 @@ dagster_assets:
       - name: "Celery Worker"
     task_kwargs:
       message: "Hello from Dagster!"
+      store_output: true
     is_active: true
 
   # Calculate Sum Asset

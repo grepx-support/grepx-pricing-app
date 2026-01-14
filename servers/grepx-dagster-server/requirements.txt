@@ -13,3 +13,7 @@ numpy==1.26.4
 celery==5.4.0
 redis==5.2.1
 sqlalchemy==2.0.23
+aiohttp
+aiosqlite
+asyncpg
+motor

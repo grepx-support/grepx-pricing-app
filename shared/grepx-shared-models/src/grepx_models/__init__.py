@@ -10,6 +10,10 @@ from .celery_task import CeleryTask
 from .base import Base
 from .business_tasks_master import BusinessTasksMaster
 from .storage_master import StorageMaster, StorageType
+from .prefect_flow import PrefectFlow
+from .prefect_task import PrefectTask
+from .prefect_deployment import PrefectDeployment
+from .prefect_work_pool import PrefectWorkPool
 
 __all__ = [
     'Asset',
@@ -22,6 +26,10 @@ __all__ = [
     'BusinessTasksMaster',
     'StorageMaster',
     'StorageType',
+    'PrefectFlow',
+    'PrefectTask',
+    'PrefectDeployment',
+    'PrefectWorkPool',
 ]
 
 __version__ = "0.1.0"
