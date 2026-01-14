@@ -4,8 +4,8 @@ storage_configurations:
     storage_name: grepx_master_sqlite
     storage_type: sqlite
     description: "Main SQLite master database for storing configuration and task metadata"
-    connection_string: "sqlite:///data/grepx-master.db"
-    file_path: "data/grepx-master.db"
+    connection_string: "sqlite:///data/grepx-master_1.db"
+    file_path: "data/grepx-master_1.db"
     is_default: true
     active_flag: true
     max_connections: 10
