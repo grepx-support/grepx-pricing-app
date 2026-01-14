@@ -2,11 +2,13 @@
 Indicator Calculation Flow Module
 """
 from prefect import flow, task
+from typing import Optional, List, Any, Dict
 import sys
 from pathlib import Path
 
-# Add business tasks to path
-business_tasks_path = Path(__file__).parent.parent.parent.parent.parent.parent / "business-tasks"
+# Add business tasks to path - path relative to project root (where worker runs from)
+# When running as deployment, working directory is project root (due to pull step)
+business_tasks_path = Path("business-tasks").resolve()
 sys.path.insert(0, str(business_tasks_path))
 
 from tasks.stock_tasks import fetch_stock_prices, calculate_volatility, calculate_metrics, analyze_portfolio, daily_analysis, sector_performance
@@ -48,7 +50,7 @@ def consolidate_indicators_task(volatility_data, metrics_data):
 
 
 @flow(name="calculate_indicators", log_prints=True)
-def calculate_indicators(input_data=None, ma_window: int = 20, rsi_period: int = 14, bb_window: int = 20, bb_num_std: int = 2, macd_fast: int = 12, macd_slow: int = 26, macd_signal: int = 9):
+def calculate_indicators(input_data: Optional[Any] = None, ma_window: int = 20, rsi_period: int = 14, bb_window: int = 20, bb_num_std: int = 2, macd_fast: int = 12, macd_slow: int = 26, macd_signal: int = 9):
     """
     Main flow for calculating technical indicators using business tasks
     """

@@ -97,7 +97,9 @@ deploy_flows() {
 
 case "${1:-start}" in
     start)
-        start_server
+        start_full_server
+        sleep 15  # Give server time to start
+        start_agent
         ;;
     server)
         start_full_server

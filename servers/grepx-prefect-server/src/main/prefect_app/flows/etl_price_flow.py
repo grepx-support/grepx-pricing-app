@@ -2,11 +2,13 @@
 ETL Price Flow Module
 """
 from prefect import flow, task
+from typing import Optional, List, Any
 import sys
 from pathlib import Path
 
-# Add business tasks to path
-business_tasks_path = Path(__file__).parent.parent.parent.parent.parent.parent / "business-tasks"
+# Add business tasks to path - path relative to project root (where worker runs from)
+# When running as deployment, working directory is project root (due to pull step)
+business_tasks_path = Path("business-tasks").resolve()
 sys.path.insert(0, str(business_tasks_path))
 
 from tasks.stock_tasks import fetch_stock_prices, calculate_volatility, calculate_metrics, analyze_portfolio, daily_analysis, sector_performance
@@ -48,7 +50,7 @@ def validate_price_data_task(cleaned_data) -> bool:
 
 
 @flow(name="process_price_data", log_prints=True)
-def process_price_data(tickers: list = None, days: int = 30):
+def process_price_data(tickers: Optional[List[Any]] = None, days: int = 30):
     """
     Main ETL flow for processing price data using business tasks
     """

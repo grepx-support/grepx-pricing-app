@@ -2,7 +2,7 @@
 # ==========================
 
 # Shared models
--e ../grepx-task-generator-server
+# -e ../grepx-task-generator-server
 
 # Core Prefect dependencies
 prefect>=3.0.0

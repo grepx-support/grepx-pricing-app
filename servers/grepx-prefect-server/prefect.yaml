@@ -1,0 +1,34 @@
+# Welcome to your prefect.yaml file! You can use this file for storing and managing
+# configuration for deploying your flows. We recommend committing this file to source
+# control along with your flow code.
+
+# Generic metadata about this project
+name: grepx-pricing-app
+prefect-version: 3.6.6
+
+# build section allows you to manage and build docker images
+build: null
+
+# push section allows you to manage if and how this project is uploaded to remote locations
+push: null
+
+# pull section allows you to provide instructions for setting up the working directory
+# We'll use this to ensure the worker runs from the correct directory and doesn't try to clone
+pull:
+- prefect.deployments.steps.set_working_directory:
+    directory: "."  # Stay in the current directory where the flow files are located
+
+# the deployments section allows you to provide configuration for deploying flows
+deployments:
+- name: hello-flow-deployment
+  version: null
+  tags: ["demo", "hello"]
+  description: "Simple Hello flow"
+  entrypoint: src/main/prefect_app/flows/hello_flow.py:say_hello
+  parameters: {}
+  work_pool:
+    name: price-pool
+    work_queue_name: default
+    job_variables:
+      working_dir: "."
+  schedules: []
