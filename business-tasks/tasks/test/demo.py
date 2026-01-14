@@ -1,40 +1,27 @@
-"""Simple test task for verification."""
+"""Test and demo tasks for verification."""
 import logging
-import os
-from datetime import datetime
-from typing import Dict, Any
 import asyncio
 import json
 import aiohttp
+from datetime import datetime
+from typing import Dict, Any
+from .. import config
+
+logger = logging.getLogger(__name__)
 
 
 async def _store_result_to_mongodb(result: Dict[str, Any], collection_name: str = "task_results"):
-    """
-    Store result to MongoDB using grepx-database-server API.
+    """Store result to MongoDB using database API"""
+    api_endpoint = f"{config.API_URL}/write"
 
-    Args:
-        result: Result dictionary to store
-        collection_name: MongoDB collection name (default: task_results)
-
-    Returns:
-        str: The inserted document ID
-    """
-    # Get API URL from environment variable with fallback to localhost:8000
-    api_base_url = os.getenv("GREPX_DATABASE_API_URL", "http://localhost:8000")
-    api_endpoint = f"{api_base_url}/write"
-
-    # Storage name from grepx-master.db (storage_master table)
-    storage_name = "stock_analysis_mongodb"
-
-    # Prepare request payload according to WriteRequest schema
     payload = {
-        "storage_name": storage_name,
-        "model_class_name": collection_name,  # Collection name for MongoDB
+        "storage_name": config.STORAGE_NAME,
+        "model_class_name": collection_name,
         "data": result
     }
 
-    print(f"[DEBUG] Sending write request to {api_endpoint}")
-    print(f"[DEBUG] Payload: {json.dumps(payload, indent=2, default=str)}")
+    logger.debug(f"Sending write request to {api_endpoint}")
+    logger.debug(f"Payload: {json.dumps(payload, indent=2, default=str)}")
 
     try:
         async with aiohttp.ClientSession() as session:
@@ -44,36 +31,24 @@ async def _store_result_to_mongodb(result: Dict[str, Any], collection_name: str 
                     raise Exception(f"API request failed with status {response.status}: {error_text}")
 
                 response_data = await response.json()
-                print(f"[DEBUG] API Response: {response_data}")
+                logger.debug(f"API Response: {response_data}")
 
                 if not response_data.get("success"):
                     raise Exception("Write operation failed")
 
-                # Return the inserted ID
                 inserted_id = response_data.get("id")
                 return str(inserted_id) if inserted_id else "unknown"
 
     except aiohttp.ClientError as e:
-        print(f"[ERROR] HTTP request failed: {str(e)}")
-        raise Exception(f"Failed to connect to database API at {api_base_url}: {str(e)}")
+        logger.error(f"HTTP request failed: {str(e)}")
+        raise Exception(f"Failed to connect to database API at {config.API_URL}: {str(e)}")
     except Exception as e:
-        print(f"[ERROR] Failed to store result: {str(e)}")
+        logger.error(f"Failed to store result: {str(e)}")
         raise
 
 
 def hello_world(name: str = "World", message: str = None, store_output: bool = False) -> Dict[str, Any]:
-    """
-    Simple test task that returns a greeting message.
-
-    Args:
-        name: Name to greet (default: "World")
-        message: Optional custom message
-        store_output: Whether to store output in database
-
-    Returns:
-        Dictionary with greeting and metadata
-    """
-
+    """Simple test task that returns a greeting message"""
     greeting = message if message else f"Hello, {name}!"
     result = {
         "greeting": greeting,
@@ -82,25 +57,21 @@ def hello_world(name: str = "World", message: str = None, store_output: bool = F
         "status": "success"
     }
 
-    # Store to MongoDB if requested
     if store_output:
-        print(f"[DEBUG] store_output=True, storing result to MongoDB...")
+        logger.debug("store_output=True, storing result to MongoDB...")
         try:
             inserted_id = asyncio.run(_store_result_to_mongodb(result))
-            print(f"[DEBUG] Result stored with ID: {inserted_id}")
-
-            # Celery-safe: do NOT return ObjectId or DB identifiers
+            logger.debug(f"Result stored with ID: {inserted_id}")
             result["stored"] = True
-
         except Exception as e:
-            print(f"[ERROR] Storage failed: {str(e)}")
+            logger.error(f"Storage failed: {str(e)}")
             result["storage_error"] = str(e)
 
     return result
 
 
 def calculate_sum(numbers: list, store_output: bool = False, task_id: str = None, run_id: str = None) -> Dict[str, Any]:
-
+    """Calculate sum and statistics for a list of numbers"""
     if not numbers:
         raise ValueError("Numbers list cannot be empty")
 

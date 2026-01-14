@@ -1,0 +1,122 @@
+# Fundamentals Data Loader Tasks Configuration
+# Individual tasks for loading and extracting financial data
+
+celery_tasks:
+  # Ticker fetching task
+  - name: fundamentals.fetch_tickers
+    module_path: business-tasks.tasks.fundamentals.loader.ticker_fetcher
+    function_name: fetch_tickers
+    description: Fetch all tickers from database
+    tags: [fundamentals, data_loading, tickers]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 300
+    is_active: true
+
+  # Individual statement loaders
+  - name: fundamentals.load_balance_sheet
+    module_path: business-tasks.tasks.fundamentals.loader.statement_loader
+    function_name: load_balance_sheet
+    description: Load balance sheet for a ticker
+    tags: [fundamentals, data_loading, balance_sheet]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 300
+    is_active: true
+
+  - name: fundamentals.load_income_statement
+    module_path: business-tasks.tasks.fundamentals.loader.statement_loader
+    function_name: load_income_statement
+    description: Load income statement for a ticker
+    tags: [fundamentals, data_loading, income_statement]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 300
+    is_active: true
+
+  - name: fundamentals.load_cash_flow
+    module_path: business-tasks.tasks.fundamentals.loader.statement_loader
+    function_name: load_cash_flow
+    description: Load cash flow statement for a ticker
+    tags: [fundamentals, data_loading, cash_flow]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 300
+    is_active: true
+
+  - name: fundamentals.load_all_statements
+    module_path: business-tasks.tasks.fundamentals.loader.statement_loader
+    function_name: load_all_statements
+    description: Load all financial statements for a ticker
+    tags: [fundamentals, data_loading, statements]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 600
+    is_active: true
+
+  # Data extraction task
+  - name: fundamentals.extract_ticker_record
+    module_path: business-tasks.tasks.fundamentals.loader.data_extractor
+    function_name: extract_ticker_record
+    description: Extract and format financial data for a ticker
+    tags: [fundamentals, data_extraction]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 300
+    is_active: true
+
+  # Single ticker loader task
+  - name: fundamentals.load_ticker_financial_data
+    module_path: business-tasks.tasks.fundamentals.loader.load_ticker
+    function_name: load_ticker_financial_data
+    description: Load financial data for a single ticker
+    tags: [fundamentals, data_loading, single_ticker]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 600
+    is_active: true
+
+  # Main loader task
+  - name: fundamentals.load_financial_data
+    module_path: business-tasks.tasks.fundamentals.data_loader
+    function_name: load_financial_data
+    description: Load financial data for all tickers
+    tags: [fundamentals, data_loading, all_tickers]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 1800
+    is_active: true
+
+dagster_assets: []
+dagster_resources: []
+dagster_schedules: []
+dagster_sensors: []

@@ -22,7 +22,7 @@ class DynamicAssetFactory:
             partitions = partition_config.get('partitions', [])
             return StaticPartitionsDefinition(partitions)
         return None
-    
+
     @staticmethod
     def create_asset_function(asset_config, task_client: TaskClient):
         """Create asset function from database config that executes Celery tasks"""
@@ -44,7 +44,7 @@ class DynamicAssetFactory:
             task_args = asset_config.task_args if asset_config.task_args else []
             task_kwargs = asset_config.task_kwargs if asset_config.task_kwargs else {}
             config = asset_config.config if asset_config.config else {}
-        
+
         def asset_function(context: AssetExecutionContext, **deps):
             try:
                 # Combine task_kwargs, config, and dependency values
@@ -67,22 +67,22 @@ class DynamicAssetFactory:
 
                 # Submit and execute Celery task
                 result = task_client.execute(celery_task_name, *task_args, **combined_kwargs)
-                
+
                 context.log.info(f"Task completed successfully")
-                
+
                 metadata = {
                     'celery_task': celery_task_name,
                     'execution_time': datetime.now().isoformat(),
                     'has_dependencies': len(deps) > 0
                 }
                 context.add_output_metadata(metadata)
-                
+
                 return result
-                
+
             except Exception as e:
                 context.log.error(f"Celery task failed: {str(e)}")
                 raise
-        
+
         asset_function.__name__ = name
         return asset_function
 

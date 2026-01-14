@@ -8,6 +8,6 @@
 # Path to files containing tasks and assets definitions
 tasks_files:
   - "resources/pricing_tasks.yaml"
+  - "resources/ticker_tasks.yaml"
+  - "resources/fundamentals_loader_tasks.yaml"
   - "resources/test_tasks.yaml"
-
-
