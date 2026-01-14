@@ -3,8 +3,8 @@
 
 celery_tasks:
   # Ticker Loading Task
-  - name: data.load_tickers
-    module_path: business-tasks.tasks.ticker_loader
+  - name: business-tasks.data.load_tickers
+    module_path: business-tasks.tasks.data.tickers
     function_name: load_tickers
     description: Load tickers from CSV file and store in database with date and source
     tags: [data, ingestion, tickers]
@@ -23,7 +23,7 @@ dagster_assets:
     description: "Load tickers from CSV file and store in database"
     group_name: data_ingestion
     asset_type: source
-    celery_task_name: data.load_tickers
+    celery_task_name: business-tasks.data.load_tickers
     dependencies: []
     config: {}
     task_args: []

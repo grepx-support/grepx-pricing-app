@@ -1,5 +1,5 @@
 """
-Main Task Generator - Orchestrates Celery task and Dagster asset generation
+Main Task Generator - Orchestrates Celery task, Dagster asset
 """
 from typing import Dict, List, Any, Optional
 from datetime import datetime
@@ -9,13 +9,13 @@ from .dagster_asset_generator import DagsterAssetGenerator
 
 class TaskGenerator:
     """
-    Main task generator that creates both Celery tasks and Dagster assets
+    Main task generator that creates Celery tasks, Dagster assets
     """
-    
+
     def __init__(self, db_manager):
         """
         Initialize task generator with database manager
-        
+
         Args:
             db_manager: DatabaseManager instance for database operations
         """
@@ -25,8 +25,8 @@ class TaskGenerator:
     
     def generate_from_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate tasks and assets from a configuration dictionary
-        
+        Generate tasks, assets from a configuration dictionary
+
         Args:
             config: Configuration dict with structure:
                 {
@@ -36,7 +36,7 @@ class TaskGenerator:
                     'schedules': [...],
                     'sensors': [...]
                 }
-        
+
         Returns:
             Dict with counts of created items
         """
@@ -47,37 +47,38 @@ class TaskGenerator:
             'schedules': 0,
             'sensors': 0
         }
-        
+
         # Generate Celery tasks
         if 'celery_tasks' in config:
             for task_config in config['celery_tasks']:
                 if self.celery_generator.create_task(**task_config):
                     results['celery_tasks'] += 1
-        
+
         # Generate Dagster assets
         if 'assets' in config:
             for asset_config in config['assets']:
                 if self.asset_generator.create_asset(**asset_config):
                     results['assets'] += 1
-        
+
         # Generate resources
         if 'resources' in config:
             for resource_config in config['resources']:
                 if self._create_resource(resource_config):
                     results['resources'] += 1
-        
+
         # Generate schedules
         if 'schedules' in config:
             for schedule_config in config['schedules']:
                 if self._create_schedule(schedule_config):
                     results['schedules'] += 1
-        
+
         # Generate sensors
         if 'sensors' in config:
             for sensor_config in config['sensors']:
                 if self._create_sensor(sensor_config):
                     results['sensors'] += 1
-        
+
+     
         return results
     
     def _create_resource(self, config: Dict[str, Any]) -> bool:

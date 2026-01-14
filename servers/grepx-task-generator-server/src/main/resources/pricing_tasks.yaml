@@ -2,7 +2,7 @@
 # Tasks for calculating fundamental financial metrics
 
 celery_tasks:
-  - name: fundamentals.download_financial_data
+  - name: business-tasks.fundamentals.download_financial_data
     module_path: business-tasks.tasks.fundamentals.download
     function_name: download_financial_data
     description: Download all financial data dynamically based on data_types parameter
@@ -16,7 +16,7 @@ celery_tasks:
     timeout: 1800
     is_active: true
 
-  - name: fundamentals.extract_financial_fields
+  - name: business-tasks.fundamentals.extract_financial_fields
     module_path: business-tasks.tasks.fundamentals.extract
     function_name: extract_financial_fields
     description: Extract specific fields from raw financial statements
@@ -31,7 +31,7 @@ celery_tasks:
     is_active: true
 
   # Fundamental Metrics Calculation Tasks
-  - name: fundamentals.calculate_free_cash_flow
+  - name: business-tasks.fundamentals.calculate_free_cash_flow
     module_path: business-tasks.tasks.fundamentals.metrics
     function_name: calculate_free_cash_flow
     description: Calculate Free Cash Flow metric
@@ -42,7 +42,7 @@ celery_tasks:
     timeout: 300
     is_active: true
 
-  - name: fundamentals.calculate_debt_to_equity
+  - name: business-tasks.fundamentals.calculate_debt_to_equity
     module_path: business-tasks.tasks.fundamentals.metrics
     function_name: calculate_debt_to_equity
     description: Calculate Debt-to-Equity Ratio metric
@@ -53,7 +53,7 @@ celery_tasks:
     timeout: 300
     is_active: true
 
-  - name: fundamentals.calculate_current_ratio
+  - name: business-tasks.fundamentals.calculate_current_ratio
     module_path: business-tasks.tasks.fundamentals.metrics
     function_name: calculate_current_ratio
     description: Calculate Current Ratio metric
@@ -64,7 +64,7 @@ celery_tasks:
     timeout: 300
     is_active: true
 
-  - name: fundamentals.calculate_net_profit_margin
+  - name: business-tasks.fundamentals.calculate_net_profit_margin
     module_path: business-tasks.tasks.fundamentals.metrics
     function_name: calculate_net_profit_margin
     description: Calculate Net Profit Margin metric
@@ -75,7 +75,7 @@ celery_tasks:
     timeout: 300
     is_active: true
 
-  - name: fundamentals.calculate_return_on_equity
+  - name: business-tasks.fundamentals.calculate_return_on_equity
     module_path: business-tasks.tasks.fundamentals.metrics
     function_name: calculate_return_on_equity
     description: Calculate Return on Equity metric
@@ -87,7 +87,7 @@ celery_tasks:
     is_active: true
 
   # Data Ingestion Tasks
-  - name: data.load_tickers
+  - name: business-tasks.data.load_tickers
     module_path: business-tasks.tasks.data.tickers
     function_name: load_tickers
     description: Load tickers from CSV file and store in database
@@ -106,7 +106,7 @@ dagster_assets:
     description: Download raw financial statements for all tickers
     group_name: fundamentals_ingestion
     asset_type: source
-    celery_task_name: fundamentals.download_financial_data
+    celery_task_name: business-tasks.fundamentals.download_financial_data
     dependencies: [ticker_data]
     config: {}
     task_args: []
@@ -122,7 +122,7 @@ dagster_assets:
     description: Extract specific fields from raw financial statements
     group_name: fundamentals_ingestion
     asset_type: transformation
-    celery_task_name: fundamentals.extract_financial_fields
+    celery_task_name: business-tasks.fundamentals.extract_financial_fields
     dependencies: [financial_data]
     config: {}
     task_args: []
@@ -137,7 +137,7 @@ dagster_assets:
     description: Calculate Free Cash Flow metric
     group_name: fundamentals_metrics
     asset_type: transformation
-    celery_task_name: fundamentals.calculate_free_cash_flow
+    celery_task_name: business-tasks.fundamentals.calculate_free_cash_flow
     dependencies: [extracted_fields]
     config: {}
     task_args: []
@@ -152,7 +152,7 @@ dagster_assets:
     description: Calculate Debt-to-Equity Ratio metric
     group_name: fundamentals_metrics
     asset_type: transformation
-    celery_task_name: fundamentals.calculate_debt_to_equity
+    celery_task_name: business-tasks.fundamentals.calculate_debt_to_equity
     dependencies: [extracted_fields]
     config: {}
     task_args: []
@@ -167,7 +167,7 @@ dagster_assets:
     description: Calculate Current Ratio metric
     group_name: fundamentals_metrics
     asset_type: transformation
-    celery_task_name: fundamentals.calculate_current_ratio
+    celery_task_name: business-tasks.fundamentals.calculate_current_ratio
     dependencies: [extracted_fields]
     config: {}
     task_args: []
@@ -182,7 +182,7 @@ dagster_assets:
     description: Calculate Net Profit Margin metric
     group_name: fundamentals_metrics
     asset_type: transformation
-    celery_task_name: fundamentals.calculate_net_profit_margin
+    celery_task_name: business-tasks.fundamentals.calculate_net_profit_margin
     dependencies: [extracted_fields]
     config: {}
     task_args: []
@@ -197,7 +197,7 @@ dagster_assets:
     description: Calculate Return on Equity metric
     group_name: fundamentals_metrics
     asset_type: transformation
-    celery_task_name: fundamentals.calculate_return_on_equity
+    celery_task_name: business-tasks.fundamentals.calculate_return_on_equity
     dependencies: [extracted_fields]
     config: {}
     task_args: []

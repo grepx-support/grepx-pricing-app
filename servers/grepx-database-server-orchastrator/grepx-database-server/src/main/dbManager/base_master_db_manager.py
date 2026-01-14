@@ -31,6 +31,7 @@ class StorageMaster(Model):
     updated_date = DateTimeField()
     created_by = StringField(max_length=100)
     updated_by = StringField(max_length=100)
+
     
     @classmethod
     def get_table_name(cls) -> str:

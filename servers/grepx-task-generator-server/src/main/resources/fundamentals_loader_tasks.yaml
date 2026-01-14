@@ -15,7 +15,7 @@ celery_tasks:
       interval_start: 0
       interval_step: 0.5
     timeout: 300
-    is_active: true
+    is_active: false
 
   # Individual statement loaders
   - name: fundamentals.load_balance_sheet
@@ -30,7 +30,7 @@ celery_tasks:
       interval_start: 0
       interval_step: 0.5
     timeout: 300
-    is_active: true
+    is_active: false
 
   - name: fundamentals.load_income_statement
     module_path: business-tasks.tasks.fundamentals.loader.statement_loader
@@ -44,7 +44,7 @@ celery_tasks:
       interval_start: 0
       interval_step: 0.5
     timeout: 300
-    is_active: true
+    is_active: false
 
   - name: fundamentals.load_cash_flow
     module_path: business-tasks.tasks.fundamentals.loader.statement_loader
@@ -58,7 +58,7 @@ celery_tasks:
       interval_start: 0
       interval_step: 0.5
     timeout: 300
-    is_active: true
+    is_active: false
 
   - name: fundamentals.load_all_statements
     module_path: business-tasks.tasks.fundamentals.loader.statement_loader
@@ -72,7 +72,7 @@ celery_tasks:
       interval_start: 0
       interval_step: 0.5
     timeout: 600
-    is_active: true
+    is_active: false
 
   # Data extraction task
   - name: fundamentals.extract_ticker_record
@@ -84,7 +84,7 @@ celery_tasks:
       bind: false
     retry_policy: {}
     timeout: 300
-    is_active: true
+    is_active: false
 
   # Single ticker loader task
   - name: fundamentals.load_ticker_financial_data
@@ -99,7 +99,7 @@ celery_tasks:
       interval_start: 0
       interval_step: 0.5
     timeout: 600
-    is_active: true
+    is_active: false
 
   # Main loader task
   - name: fundamentals.load_financial_data
@@ -114,7 +114,7 @@ celery_tasks:
       interval_start: 0
       interval_step: 0.5
     timeout: 1800
-    is_active: true
+    is_active: false
 
 dagster_assets: []
 dagster_resources: []

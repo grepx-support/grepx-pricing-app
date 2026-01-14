@@ -26,8 +26,6 @@ sys.path.insert(0, str(script_dir / "main"))
 
 from task_generator.database import DatabaseManager
 from grepx_models import CeleryTask, Asset, Resource, Schedule, Sensor, StorageMaster, StorageType
-
-
 def load_config(config_path: Path) -> dict:
     """Load task-config.yaml"""
     with open(config_path, 'r') as f:
@@ -298,7 +296,6 @@ def insert_sensors(db_manager: DatabaseManager, sensors: list):
         session.commit()
     return count
 
-
 def main():
     """Main execution"""
     # Get script directory (src/main/task_generator/main.py -> src/main/)
@@ -313,7 +310,7 @@ def main():
     print("Loading configuration...")
     config = load_config(config_path)
     
-    # Get database URL - prefer environment variable over config file
+    # Get database URL
     db_url = os.getenv('GREPX_MASTER_DB_URL')
     if not db_url:
         # Fallback to config file if environment variable not set
@@ -393,7 +390,8 @@ def main():
         if 'dagster_sensors' in tasks_data:
             print("\nInserting Dagster sensors...")
             results['sensors'] = insert_sensors(db_manager, tasks_data['dagster_sensors'])
-        
+
+   
         # Update totals
         for key in total_results:
             total_results[key] += results[key]
