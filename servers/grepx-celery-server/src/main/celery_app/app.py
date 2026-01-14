@@ -43,12 +43,17 @@ def create_app(cfg: DictConfig) -> Celery:
 
     # Load tasks from database
     from .task_loader import load_tasks_from_db
+    from . import prefect_tasks
     
     logger.info("Loading tasks from database...")
     tasks = load_tasks_from_db(
         db_uri=cfg.tasks.database.uri,
         table=cfg.tasks.database.get("table", "celery_tasks")
     )
+    
+    # Initialize and register Prefect tasks
+    logger.info("Registering Prefect tasks...")
+    prefect_tasks.register_tasks()
     
     # Register tasks
     logger.info("Registering tasks...")

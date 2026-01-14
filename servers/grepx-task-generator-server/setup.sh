@@ -5,13 +5,20 @@ set -euo pipefail
 
 VENV_DIR="venv"
 
+# Set PROJECT_ROOT before loading common environment variables
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
+
+# Export PROJECT_ROOT for env.common to use
+export PROJECT_ROOT
+
 # Load common environment variables
 if [ -f ../../env.common ]; then
     source ../../env.common
 fi
 
 # Default Python version if not set
-PYTHON_VERSION=${PYTHON_VERSION:-python3.12}
+PYTHON_VERSION=${PYTHON_VERSION:-python}
 
 # Handle clean option
 if [ "${1:-}" = "clean" ]; then
@@ -38,8 +45,8 @@ else
 fi
 
 # Cross-platform activation
-if [ -f "$VENV_DIR/bin/activate" ]; then
-    ACTIVATE_PATH="$VENV_DIR/bin/activate"
+if [ -f "$VENV_DIR/Scripts/activate" ]; then
+    ACTIVATE_PATH="$VENV_DIR/Scripts/activate"
 elif [ -f "$VENV_DIR/Scripts/activate" ]; then
     ACTIVATE_PATH="$VENV_DIR/Scripts/activate"
 else
@@ -50,8 +57,8 @@ fi
 source "$ACTIVATE_PATH"
 
 # Upgrade pip
-echo "Upgrading pip..."
-$PYTHON_VERSION -m pip install --upgrade pip
+# echo "Upgrading pip..."
+# $PYTHON_VERSION -m pip install --upgrade pip
 
 # Install dependencies
 echo "Installing dependencies..."

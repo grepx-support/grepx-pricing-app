@@ -3,6 +3,13 @@
 
 set -e
 
+# Set PROJECT_ROOT before loading common environment variables
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Export PROJECT_ROOT for env.common to use
+export PROJECT_ROOT
+
 cd "$(dirname "$0")"
 
 # Load common environment variables from root
@@ -35,8 +42,17 @@ if [ -n "${PYTHON_VERSION:-}" ]; then
     PYTHON=$PYTHON_VERSION
     echo "Using Python from env.common: $PYTHON"
 else
-    PYTHON=$(find_python)
-    echo "Using Python from find_python: $PYTHON"
+    # Try to find appropriate Python version
+    if command -v python3.12 &> /dev/null; then
+        PYTHON=python3.12
+    elif command -v python3 &> /dev/null; then
+        PYTHON=python3
+    elif command -v python &> /dev/null; then
+        PYTHON=python
+    else
+        echo "Error: Python not found. Please install Python 3.9+ and ensure it's in your PATH."
+        exit 1
+    fi
 fi
 
 if [ ! -d "$VENV_DIR" ]; then

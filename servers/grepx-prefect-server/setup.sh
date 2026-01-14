@@ -33,7 +33,7 @@ echo "========================================="
 
 # Check Python version
 echo "Checking Python version..."
-PYTHON_CMD=${PYTHON_VERSION:-python3.12}
+PYTHON_CMD=${PYTHON_VERSION:-python}
 
 if ! command -v $PYTHON_CMD &> /dev/null; then
     echo "Error: $PYTHON_CMD not found"
@@ -54,11 +54,11 @@ fi
 
 # Activate virtual environment
 echo "Activating virtual environment..."
-source venv/bin/activate
+source venv/Scripts/activate
 
 # Upgrade pip
-echo "Upgrading pip..."
-pip install --upgrade pip
+# echo "Upgrading pip..."
+# pip install --upgrade pip
 
 # Install requirements
 echo "Installing requirements..."

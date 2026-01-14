@@ -5,13 +5,34 @@ set -euo pipefail
 
 VENV_DIR="venv"
 
+# Set PROJECT_ROOT before loading common environment variables
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
+
+# Export PROJECT_ROOT for env.common to use
+export PROJECT_ROOT
+
 # Load common environment variables
 if [ -f ../../env.common ]; then
     source ../../env.common
 fi
 
 # Default Python version if not set
-PYTHON_VERSION=${PYTHON_VERSION:-python3.12}
+if [ -n "${PYTHON_VERSION:-}" ]; then
+    PYTHON_VERSION=$PYTHON_VERSION
+else
+    # Try to find appropriate Python version
+    if command -v python3.12 &> /dev/null; then
+        PYTHON_VERSION=python3.12
+    elif command -v python3 &> /dev/null; then
+        PYTHON_VERSION=python3
+    elif command -v python &> /dev/null; then
+        PYTHON_VERSION=python
+    else
+        echo "Error: Python not found. Please install Python 3.9+ and ensure it's in your PATH."
+        exit 1
+    fi
+fi
 
 # Handle clean option
 if [ "${1:-}" = "clean" ]; then

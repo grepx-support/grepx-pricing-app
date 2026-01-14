@@ -12,14 +12,22 @@ export PROJECT_ROOT="$(cd ../../ && pwd)"
 
 # Load and expand environment variables from env.common
 if [ -f "../../env.common" ]; then
-    while IFS='=' read -r key value; do
+    # Read the env.common file properly, handling potential Windows line endings
+    OLD_IFS=$IFS
+    IFS=$'\n'
+    while read -r line || [[ -n "$line" ]]; do
         # Skip comments and empty lines
-        [[ "$key" =~ ^#.*$ ]] && continue
-        [[ -z "$key" ]] && continue
+        [[ "$line" =~ ^#.*$ ]] || [[ -z "$line" ]] || [[ ! "$line" =~ = ]] && continue
+        
+        # Extract key and value
+        key="${line%%=*}"
+        value="${line#*=}"
+        
         # Expand ${PROJECT_ROOT} in the value
         value="${value//\$\{PROJECT_ROOT\}/$PROJECT_ROOT}"
         export "$key"="$value"
     done < ../../env.common
+    IFS=$OLD_IFS
 fi
 
 # Set Prefect home directory
@@ -34,7 +42,7 @@ echo ""
 
 # Activate virtual environment
 if [ -d "venv" ]; then
-    source venv/bin/activate
+    source venv/Scripts/activate
 else
     echo "Error: Virtual environment not found. Run ./setup.sh first"
     exit 1
@@ -90,7 +98,7 @@ echo " [MANDATORY] TO RUN THE PREFECT FLOWS AND TASKS RUN BELOW COMMANDS MANDATO
 echo "To start a worker:"
 echo "  source venv/bin/activate"
 echo "  export PREFECT_API_URL=http://127.0.0.1:4200/api"
-echo "  export GREPX_MASTER_DB_URL=\"sqlite:////Users/mahesh/Desktop/grepx-pricing-app/data/grepx-master.db\""
+echo "  export GREPX_MASTER_DB_URL=\"$GREPX_MASTER_DB_URL\""
 echo "  prefect worker start --pool <pool-name>"
 echo ""
 echo "To stop the server:"
