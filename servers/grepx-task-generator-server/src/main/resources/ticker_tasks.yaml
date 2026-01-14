@@ -1,0 +1,48 @@
+# Ticker Data Ingestion Tasks Configuration
+# Tasks for loading tickers from CSV files into database
+
+celery_tasks:
+  # Ticker Loading Task
+  - name: business-tasks.data.load_tickers
+    module_path: business-tasks.tasks.data.tickers
+    function_name: load_tickers
+    description: Load tickers from CSV file and store in database with date and source
+    tags: [data, ingestion, tickers]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 600
+    is_active: true
+
+dagster_assets:
+  # Ticker Data Source Asset
+  - name: ticker_data
+    description: "Load tickers from CSV file and store in database"
+    group_name: data_ingestion
+    asset_type: source
+    celery_task_name: business-tasks.data.load_tickers
+    dependencies: []
+    config: {}
+    task_args: []
+    task_kwargs:
+      csv_file_path: "data/tickers.csv"
+      date: "2024-01-14"
+      collection_name: "tickers"
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+dagster_resources:
+  - name: ticker_database
+    resource_type: database
+    description: Database for storing ticker data
+    config:
+      connection_string: "ticker_data.duckdb"
+    is_active: true
+
+dagster_schedules: []
+
+dagster_sensors: []

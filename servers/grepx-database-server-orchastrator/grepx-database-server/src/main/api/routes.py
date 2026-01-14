@@ -21,16 +21,41 @@ async def health_check():
 async def query_data(request: QueryRequest):
     if not server:
         raise HTTPException(status_code=503, detail="Server not initialized")
-    
+
     try:
-        results = await server.select_data(
-            request.storage_name,
-            request.model_class_name,
-            request.filters,
-            request.limit,
-            request.offset
-        )
-        return {"data": results, "count": len(results)}
+        backend = server.read_service.get_backend(request.storage_name)
+        if not backend:
+            raise ValueError(f"No backend found for storage: {request.storage_name}")
+
+        if hasattr(backend, 'backend_name') and backend.backend_name == 'mongodb':
+            from bson import ObjectId
+
+            collection = backend.database[request.model_class_name]
+            mongo_query = request.filters or {}
+
+            cursor = collection.find(mongo_query)
+
+            if request.limit:
+                cursor = cursor.limit(request.limit)
+            if request.offset:
+                cursor = cursor.skip(request.offset)
+
+            results = []
+            async for doc in cursor:
+                if '_id' in doc:
+                    doc['_id'] = str(doc['_id'])
+                results.append(doc)
+
+            return {"data": results, "count": len(results)}
+        else:
+            results = await server.select_data(
+                request.storage_name,
+                request.model_class_name,
+                request.filters,
+                request.limit,
+                request.offset
+            )
+            return {"data": results, "count": len(results)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -38,14 +63,29 @@ async def query_data(request: QueryRequest):
 async def query_one(request: QueryRequest):
     if not server:
         raise HTTPException(status_code=503, detail="Server not initialized")
-    
+
     try:
-        result = await server.select_one(
-            request.storage_name,
-            request.model_class_name,
-            request.filters or {}
-        )
-        return {"data": result}
+        backend = server.read_service.get_backend(request.storage_name)
+        if not backend:
+            raise ValueError(f"No backend found for storage: {request.storage_name}")
+
+        if hasattr(backend, 'backend_name') and backend.backend_name == 'mongodb':
+            collection = backend.database[request.model_class_name]
+            mongo_query = request.filters or {}
+
+            result = await collection.find_one(mongo_query)
+
+            if result and '_id' in result:
+                result['_id'] = str(result['_id'])
+
+            return {"data": result}
+        else:
+            result = await server.select_one(
+                request.storage_name,
+                request.model_class_name,
+                request.filters or {}
+            )
+            return {"data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -81,14 +121,34 @@ async def write_data(request: WriteRequest):
 async def upsert_data(request: UpsertRequest):
     if not server:
         raise HTTPException(status_code=503, detail="Server not initialized")
-    
+
     try:
-        success = await server.upsert_data(
-            request.storage_name,
-            request.data,
-            request.filter_fields
-        )
-        return {"success": success}
+        backend = server.write_service.get_backend(request.storage_name)
+        if not backend:
+            raise ValueError(f"No backend found for storage: {request.storage_name}")
+
+        # For MongoDB backend, support raw dict upserts directly to collection
+        if hasattr(backend, 'backend_name') and backend.backend_name == 'mongodb':
+            collection = backend.database[request.model_class_name]
+
+            # Build filter from filter_fields
+            mongo_filter = request.filter_fields or {}
+
+            # Perform upsert with $set operator
+            result = await collection.update_one(
+                mongo_filter,
+                {'$set': request.data},
+                upsert=True
+            )
+            return {"success": True}
+        else:
+            # For other backends, use ORM upsert
+            success = await server.upsert_data(
+                request.storage_name,
+                request.data,
+                request.filter_fields
+            )
+            return {"success": success}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -113,13 +173,25 @@ async def bulk_upsert_data(request: BulkUpsertRequest):
 async def count_data(request: QueryRequest):
     if not server:
         raise HTTPException(status_code=503, detail="Server not initialized")
-    
+
     try:
-        count = await server.count_data(
-            request.storage_name,
-            request.model_class_name,
-            request.filters
-        )
-        return {"count": count}
+        backend = server.read_service.get_backend(request.storage_name)
+        if not backend:
+            raise ValueError(f"No backend found for storage: {request.storage_name}")
+
+        if hasattr(backend, 'backend_name') and backend.backend_name == 'mongodb':
+            collection = backend.database[request.model_class_name]
+            mongo_query = request.filters or {}
+
+            count = await collection.count_documents(mongo_query)
+
+            return {"count": count}
+        else:
+            count = await server.count_data(
+                request.storage_name,
+                request.model_class_name,
+                request.filters
+            )
+            return {"count": count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
