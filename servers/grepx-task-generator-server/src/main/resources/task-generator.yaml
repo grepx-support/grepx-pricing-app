@@ -1,0 +1,24 @@
+# Task Generator Configuration
+# This file defines which tables to bootstrap and which files to load
+
+tables:
+  - name: storage_master
+    files:
+      - database.yaml
+    
+  - name: celery_tasks
+    files:
+      - sample_tasks.yaml
+    
+  - name: assets
+    files:
+      - sample_assets.yaml
+    
+  - name: resources
+    files: []
+    
+  - name: schedules
+    files: []
+    
+  - name: sensors
+    files: []

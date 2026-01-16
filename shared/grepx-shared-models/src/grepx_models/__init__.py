@@ -23,6 +23,5 @@ __all__ = [
     'StorageMaster',
     'StorageType',
 ]
-
 __version__ = "0.1.0"
 
