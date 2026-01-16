@@ -149,7 +149,7 @@ run_server() {
     echo "  Port: ${SERVER_PORT:-8000}"
     activate_venv
     cd "$SCRIPT_DIR"
-    python src/main/main.py | tee "$LOG_DIR/${SERVER_NAME}_${DATE}.log"
+    python3 src/main/main.py | tee "$LOG_DIR/${SERVER_NAME}_${DATE}.log"
 }
 
 case "${1:-run}" in

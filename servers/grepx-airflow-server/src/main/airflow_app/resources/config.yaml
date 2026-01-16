@@ -1,0 +1,30 @@
+# Apache Airflow Configuration
+# ============================
+# Configuration following Dagster pattern for database integration
+
+app:
+  name: "grepx-airflow-server"
+  version: "1.0.0"
+
+airflow:
+  home: "${AIRFLOW_HOME}"
+
+# Database configuration
+# Uses GREPX_MASTER_DB_URL from env.common
+# Airflow will create its own tables in the shared database
+database:
+  db_url: "${GREPX_MASTER_DB_URL}"
+
+# Celery configuration (for task execution)
+celery:
+  broker_url: "redis://localhost:6379/0"
+  result_backend: "redis://localhost:6379/0"
+
+# Logging configuration
+logging:
+  base_log_folder: "${PROJECT_ROOT}/logs/airflow"
+
+# DAG configuration
+dags:
+  folder: "${AIRFLOW_HOME}/dags"
+  example_dags: false

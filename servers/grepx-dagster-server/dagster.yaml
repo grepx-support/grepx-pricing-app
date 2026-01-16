@@ -1,0 +1,25 @@
+# Dagster daemon configuration
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: QueuedRunCoordinator
+  config:
+    max_workers: 5
+
+run_launcher:
+  module: dagster.core.launcher
+  class: DefaultRunLauncher
+
+# Storage configuration
+event_log_storage:
+  module: dagster.core.storage.event_log
+  class: ConsolidatedSqliteEventLogStorage
+
+# Daemon settings to prevent multiple instances
+dagster_daemon:
+  # How frequently the daemon should check for work
+  heartbeat_interval_seconds: 30
+  # How long to wait before considering a daemon as dead
+  heartbeat_ttl: 300
+  # Which daemons to run (only run one instance of each)
+  daemon_urls:
+    - http://localhost:3000

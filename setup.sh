@@ -33,6 +33,13 @@ if [ "${1:-}" = "clean" ]; then
     ./setup.sh clean
     cd ../..
     
+    echo "Cleaning airflow server..."
+    if [ -d servers/grepx-airflow-server ]; then
+        cd servers/grepx-airflow-server
+        ./setup.sh clean
+        cd ../..
+    fi
+    
     echo ""
     echo "=== Clean complete ==="
     echo "Run ./setup.sh to reinstall all components"
@@ -156,6 +163,11 @@ cd ../..
 echo "Setting up task generator server..."
 echo "Setting up task generator server..."
 cd servers/grepx-task-generator-server
+./setup.sh
+cd ../..
+
+echo "Setting up airflow server..."
+cd servers/grepx-airflow-server
 ./setup.sh
 cd ../..
 

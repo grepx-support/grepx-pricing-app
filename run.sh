@@ -53,12 +53,18 @@ cd servers/grepx-dagster-server
 ./run.sh $COMMAND
 cd ../..
 
+echo "Managing airflow server: $COMMAND"
+cd servers/grepx-airflow-server
+./run.sh $COMMAND
+cd ../..
+
 if [ "$COMMAND" = "start" ]; then
     echo ""
     echo "=== All servers started ==="
     echo "Database Server: http://localhost:${DB_SERVER_PORT:-8000}"
     echo "Dagster UI: http://localhost:${DAGSTER_PORT:-3000}"
     echo "Flower UI: http://localhost:${FLOWER_PORT:-5555}"
+    echo "Airflow UI: http://localhost:${AIRFLOW_PORT:-8080}"
     echo "Master Database: ${GREPX_MASTER_DB_URL:-./data/grepx-master.db}"
 elif [ "$COMMAND" = "stop" ]; then
     echo "=== All servers stopped ==="

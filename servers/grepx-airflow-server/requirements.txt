@@ -1,0 +1,15 @@
+# Apache Airflow Server Dependencies
+
+# Core Airflow
+apache-airflow==3.1.6
+
+# Shared models (editable install)
+-e ../../shared/grepx-shared-models
+
+# Celery integration for task submission
+celery
+redis
+
+# Utilities
+python-dotenv
+pyyaml

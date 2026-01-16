@@ -1,3 +1,6 @@
+# Business tasks
+-e ../../business-tasks
+
 # Shared models
 -e ../../shared/grepx-shared-models
 

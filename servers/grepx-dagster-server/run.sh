@@ -81,13 +81,26 @@ activate_venv() {
 
 start() {
     if [ -f "$PID_FILE" ]; then
-        echo "$SERVER_NAME already running"
-        return
+        PID=$(cat "$PID_FILE")
+        if kill -0 $PID 2>/dev/null; then
+            echo "$SERVER_NAME already running (PID: $PID)"
+            return
+        else
+            rm -f "$PID_FILE"
+        fi
     fi
     
     echo "Starting $SERVER_NAME server..."
     activate_venv
     cd "$SCRIPT_DIR"
+    
+    # Kill any existing dagster processes before starting
+    pkill -f "dagster.*dev" 2>/dev/null || true
+    pkill -f "dagster-daemon" 2>/dev/null || true
+    pkill -f "dagster-webserver" 2>/dev/null || true
+    
+    # Wait a moment for processes to clean up
+    sleep 2
     
     python -m dagster dev > "$LOG_DIR/${SERVER_NAME}_${DATE}.log" 2>&1 &
     echo $! > "$PID_FILE"
