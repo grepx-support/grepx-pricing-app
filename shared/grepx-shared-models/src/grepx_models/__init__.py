@@ -21,7 +21,7 @@ __all__ = [
     'Base',
     'BusinessTasksMaster',
     'StorageMaster',
-    'StorageType']
-
+    'StorageType',
+]
 __version__ = "0.1.0"
 

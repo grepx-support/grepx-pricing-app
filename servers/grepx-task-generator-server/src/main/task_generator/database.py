@@ -100,8 +100,8 @@ class DatabaseManager(ConfigurableResource):
             session.add(meta)
             session.commit()
 
-    def add_task(self, name: str, module_path: str, function_name: str, 
-                 description: str = "", tags: List[str] = None, 
+    def add_task(self, name: str, module_path: str, function_name: str,
+                 description: str = "", tags: List[str] = None,
                  options: Dict = None, retry_policy: Dict = None, timeout: int = 300):
         """Add a new Celery task to the database"""
         with self.get_session() as session:

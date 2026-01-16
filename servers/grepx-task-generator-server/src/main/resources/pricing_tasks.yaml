@@ -1,0 +1,228 @@
+# Fundamental Analysis Tasks Configuration
+# Tasks for calculating fundamental financial metrics
+
+celery_tasks:
+  - name: business-tasks.fundamentals.download_financial_data
+    module_path: business-tasks.tasks.fundamentals.download
+    function_name: download_financial_data
+    description: Download all financial data dynamically based on data_types parameter
+    tags: [fundamentals, data_download]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 1800
+    is_active: true
+
+  - name: business-tasks.fundamentals.extract_financial_fields
+    module_path: business-tasks.tasks.fundamentals.extract
+    function_name: extract_financial_fields
+    description: Extract specific fields from raw financial statements
+    tags: [fundamentals, extraction]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 600
+    is_active: true
+
+  # Fundamental Metrics Calculation Tasks
+  - name: business-tasks.fundamentals.calculate_free_cash_flow
+    module_path: business-tasks.tasks.fundamentals.metrics
+    function_name: calculate_free_cash_flow
+    description: Calculate Free Cash Flow metric
+    tags: [fundamentals, metrics, fcf]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 300
+    is_active: true
+
+  - name: business-tasks.fundamentals.calculate_debt_to_equity
+    module_path: business-tasks.tasks.fundamentals.metrics
+    function_name: calculate_debt_to_equity
+    description: Calculate Debt-to-Equity Ratio metric
+    tags: [fundamentals, metrics, leverage]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 300
+    is_active: true
+
+  - name: business-tasks.fundamentals.calculate_current_ratio
+    module_path: business-tasks.tasks.fundamentals.metrics
+    function_name: calculate_current_ratio
+    description: Calculate Current Ratio metric
+    tags: [fundamentals, metrics, liquidity]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 300
+    is_active: true
+
+  - name: business-tasks.fundamentals.calculate_net_profit_margin
+    module_path: business-tasks.tasks.fundamentals.metrics
+    function_name: calculate_net_profit_margin
+    description: Calculate Net Profit Margin metric
+    tags: [fundamentals, metrics, profitability]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 300
+    is_active: true
+
+  - name: business-tasks.fundamentals.calculate_return_on_equity
+    module_path: business-tasks.tasks.fundamentals.metrics
+    function_name: calculate_return_on_equity
+    description: Calculate Return on Equity metric
+    tags: [fundamentals, metrics, efficiency]
+    options:
+      bind: false
+    retry_policy: {}
+    timeout: 300
+    is_active: true
+
+  # Data Ingestion Tasks
+  - name: business-tasks.data.load_tickers
+    module_path: business-tasks.tasks.data.tickers
+    function_name: load_tickers
+    description: Load tickers from CSV file and store in database
+    tags: [data, ingestion, tickers]
+    options:
+      bind: false
+    retry_policy:
+      max_retries: 2
+      interval_start: 0
+      interval_step: 0.5
+    timeout: 600
+    is_active: true
+
+dagster_assets:
+  - name: financial_data
+    description: Download raw financial statements for all tickers
+    group_name: fundamentals_ingestion
+    asset_type: source
+    celery_task_name: business-tasks.fundamentals.download_financial_data
+    dependencies: [ticker_data]
+    config: {}
+    task_args: []
+    task_kwargs:
+      year: 2023
+      quarter: 4
+      data_types: ["balance_sheet", "income_statement", "cash_flow"]
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: extracted_fields
+    description: Extract specific fields from raw financial statements
+    group_name: fundamentals_ingestion
+    asset_type: transformation
+    celery_task_name: business-tasks.fundamentals.extract_financial_fields
+    dependencies: [financial_data]
+    config: {}
+    task_args: []
+    task_kwargs:
+      year: 2023
+      quarter: 4
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: free_cash_flow_metric
+    description: Calculate Free Cash Flow metric
+    group_name: fundamentals_metrics
+    asset_type: transformation
+    celery_task_name: business-tasks.fundamentals.calculate_free_cash_flow
+    dependencies: [extracted_fields]
+    config: {}
+    task_args: []
+    task_kwargs:
+      year: 2023
+      quarter: 4
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: debt_to_equity_metric
+    description: Calculate Debt-to-Equity Ratio metric
+    group_name: fundamentals_metrics
+    asset_type: transformation
+    celery_task_name: business-tasks.fundamentals.calculate_debt_to_equity
+    dependencies: [extracted_fields]
+    config: {}
+    task_args: []
+    task_kwargs:
+      year: 2023
+      quarter: 4
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: current_ratio_metric
+    description: Calculate Current Ratio metric
+    group_name: fundamentals_metrics
+    asset_type: transformation
+    celery_task_name: business-tasks.fundamentals.calculate_current_ratio
+    dependencies: [extracted_fields]
+    config: {}
+    task_args: []
+    task_kwargs:
+      year: 2023
+      quarter: 4
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: net_profit_margin_metric
+    description: Calculate Net Profit Margin metric
+    group_name: fundamentals_metrics
+    asset_type: transformation
+    celery_task_name: business-tasks.fundamentals.calculate_net_profit_margin
+    dependencies: [extracted_fields]
+    config: {}
+    task_args: []
+    task_kwargs:
+      year: 2023
+      quarter: 4
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+  - name: return_on_equity_metric
+    description: Calculate Return on Equity metric
+    group_name: fundamentals_metrics
+    asset_type: transformation
+    celery_task_name: business-tasks.fundamentals.calculate_return_on_equity
+    dependencies: [extracted_fields]
+    config: {}
+    task_args: []
+    task_kwargs:
+      year: 2023
+      quarter: 4
+    partition_type: null
+    partition_config: {}
+    is_active: true
+
+dagster_resources:
+  - name: fundamentals_database
+    resource_type: database
+    description: Database for storing fundamental metrics
+    config:
+      connection_string: "fundamentals_data.duckdb"
+    is_active: true
+
+dagster_schedules:
+  # Daily fundamental metrics calculation (after market close)
+  - name: daily_fundamentals_calculation
+    asset_selection: [financial_data, free_cash_flow_metric, debt_to_equity_metric, current_ratio_metric, net_profit_margin_metric, return_on_equity_metric]
+    cron_schedule: "0 17 * * 1-5"  # 5 PM weekdays
+    description: Daily calculation of fundamental metrics
+    is_active: false
+
+dagster_sensors: []
+  # Placeholder for future sensor configuration

@@ -25,7 +25,7 @@ class DynamicAssetBuilder:
     def build_assets(self):
         """Build all assets from database"""
         assets = []
-        
+
         for asset_data in self.assets_data:
             # Handle both dict and object access
             if isinstance(asset_data, dict):
@@ -51,13 +51,13 @@ class DynamicAssetBuilder:
                 task_args = asset_data.task_args if asset_data.task_args else []
                 task_kwargs = asset_data.task_kwargs if asset_data.task_kwargs else {}
                 config = asset_data.config if asset_data.config else {}
-            
+
             partition_def = None
             if partition_type:
                 partition_def = DynamicAssetFactory.create_partition_def(partition_type, partition_config)
-            
+
             asset_func = DynamicAssetFactory.create_asset_function(asset_data, self.task_client)
-            
+
             if dependencies:
                 original_func = asset_func
 
@@ -82,7 +82,7 @@ def wrapper(context: AssetExecutionContext{', ' + dep_params if dep_params else 
                     return wrapper
 
                 asset_func = make_wrapper(original_func, dependencies)
-            
+
             decorator_kwargs = {
                 'name': name,
                 'description': description,
@@ -91,10 +91,10 @@ def wrapper(context: AssetExecutionContext{', ' + dep_params if dep_params else 
                 decorator_kwargs['group_name'] = group_name
             if partition_def:
                 decorator_kwargs['partitions_def'] = partition_def
-            
+
             decorated_asset = asset(**decorator_kwargs)(asset_func)
             assets.append(decorated_asset)
             self.asset_map[name] = decorated_asset
-        
+
         return assets
 
