@@ -1,0 +1,27 @@
+# Sample Dagster assets
+- name: fetch_prices
+  description: Fetch historical stock prices from Yahoo Finance
+  group_name: ingestion
+  asset_type: source
+  celery_task_name: tasks.fetch_stock_prices
+  dependencies: []
+  config:
+    tickers: [AAPL, MSFT, GOOG]
+  task_args: []
+  task_kwargs: {}
+  partition_type: null
+  partition_config: {}
+  is_active: true
+
+- name: calculate_volatility
+  description: Compute daily volatility per stock
+  group_name: transformation
+  asset_type: transformation
+  celery_task_name: tasks.calculate_volatility
+  dependencies: [fetch_prices]
+  config: {}
+  task_args: []
+  task_kwargs: {}
+  partition_type: null
+  partition_config: {}
+  is_active: true

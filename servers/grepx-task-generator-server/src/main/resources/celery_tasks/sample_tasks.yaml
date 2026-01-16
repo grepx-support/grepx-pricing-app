@@ -1,0 +1,26 @@
+# Sample Celery tasks from tasks.yaml
+- name: tasks.fetch_stock_prices
+  module_path: tasks.stock_tasks
+  function_name: fetch_stock_prices
+  description: Fetch stock prices from Yahoo Finance
+  tags: [stocks, ingestion]
+  options:
+    bind: false
+    max_retries: 3
+  retry_policy:
+    max_retries: 3
+    interval_start: 0
+    interval_step: 0.2
+  timeout: 300
+  is_active: true
+
+- name: tasks.calculate_volatility
+  module_path: tasks.stock_tasks
+  function_name: calculate_volatility
+  description: Calculate stock volatility
+  tags: [stocks, transformation]
+  options:
+    bind: false
+  retry_policy: {}
+  timeout: 180
+  is_active: true

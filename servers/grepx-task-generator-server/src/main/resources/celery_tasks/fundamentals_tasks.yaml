@@ -1,0 +1,28 @@
+# Fundamentals Celery tasks
+- name: business-tasks.fundamentals.download_financial_data
+  module_path: business-tasks.tasks.fundamentals.download
+  function_name: download_financial_data
+  description: Download all financial data dynamically based on data_types parameter
+  tags: [fundamentals, data_download]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 1800
+  is_active: true
+
+- name: business-tasks.data.load_tickers
+  module_path: business-tasks.tasks.data.tickers
+  function_name: load_tickers
+  description: Load tickers from CSV file and store in database
+  tags: [data, ingestion, tickers]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 600
+  is_active: true

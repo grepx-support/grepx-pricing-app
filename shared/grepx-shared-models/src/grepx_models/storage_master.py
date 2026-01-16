@@ -18,11 +18,12 @@ class StorageType(enum.Enum):
 
 class StorageMaster(Base):
     """Master table for all storage/database configurations."""
-    
+
     __tablename__ = 'storage_master'
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True)
-    storage_name = Column(String(255), nullable=False, unique=True, index=True, comment='Unique name for this storage configuration')
+    storage_name = Column(String(255), nullable=False, unique=True, index=True,
+                          comment='Unique name for this storage configuration')
     storage_type = Column(SQLEnum(StorageType), nullable=False, comment='Type of storage/database')
     host = Column(String(255), nullable=True, comment='Database host address')
     port = Column(Integer, nullable=True, comment='Database port number')
@@ -45,10 +46,10 @@ class StorageMaster(Base):
     updated_date = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     created_by = Column(String(100), nullable=True)
     updated_by = Column(String(100), nullable=True)
-    
+
     def __repr__(self):
         return f"<StorageMaster(id={self.id}, storage_name='{self.storage_name}', storage_type='{self.storage_type.value}', active={self.active_flag})>"
-    
+
     def to_dict(self):
         """Convert model to dictionary."""
         return {
@@ -77,14 +78,14 @@ class StorageMaster(Base):
             'created_by': self.created_by,
             'updated_by': self.updated_by
         }
-    
+
     def get_connection_config(self):
         """Get connection configuration dictionary for use with database factory."""
         config = {
             'type': self.storage_type.value if self.storage_type else None,
             'database_name': self.database_name,
         }
-        
+
         if self.connection_string:
             config['connection_string'] = self.connection_string
         else:
@@ -99,15 +100,14 @@ class StorageMaster(Base):
                 config['password'] = self.password
             if self.auth_source:
                 config['auth_source'] = self.auth_source
-        
+
         if self.file_path:
             config['file_path'] = self.file_path
-        
+
         if self.ssl_enabled:
             config['ssl'] = True
-        
+
         if self.connection_params:
             config.update(self.connection_params)
-        
-        return config
 
+        return config
