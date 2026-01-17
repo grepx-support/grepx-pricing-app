@@ -2,9 +2,17 @@
 
 import logging
 from pathlib import Path
+import sys
 from typing import Dict, List, Optional, Any
 
+# Add grepx-orm/src to Python path (only if not already there)
+grepx_orm_src = Path(__file__).parent.parent.parent.parent / "libs" / "grepx-orm" / "src"
+if str(grepx_orm_src) not in sys.path:
+    sys.path.insert(0, str(grepx_orm_src))
+    
 from backends.discovery import discover_backends
+
+
 from dbManager import BaseMasterDBManager
 from config.config_loader import ConfigLoader
 from storage_management import StorageManager

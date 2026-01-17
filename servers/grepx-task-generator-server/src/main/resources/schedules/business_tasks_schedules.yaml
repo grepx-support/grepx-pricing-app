@@ -1,0 +1,52 @@
+# Business Tasks - Dagster Schedules
+# ===================================
+# Cron-based schedules for automated pipeline execution
+# Times in UTC (4:30 PM ET = 21:30 UTC during EST)
+
+# Daily Market Data Pipeline - After US Market Close
+- name: daily_market_data_pipeline
+  cron_schedule: "30 21 * * 1-5"
+  target_assets:
+    - download_active_stocks_asset
+    - download_close_prices_asset
+  config:
+    description: "Download daily market data after market close"
+  is_active: true
+
+# Daily Technical Indicators - 30 min after data download
+- name: daily_indicators_calculation
+  cron_schedule: "0 22 * * 1-5"
+  target_assets:
+    - calculate_sma_asset
+    - calculate_ema_asset
+    - calculate_rsi_asset
+    - calculate_macd_asset
+    - calculate_bollinger_bands_asset
+    - calculate_atr_asset
+    - calculate_adx_asset
+    - calculate_cci_asset
+    - calculate_obv_asset
+    - calculate_vwap_asset
+    - calculate_stochastic_asset
+    - calculate_williams_r_asset
+  config:
+    description: "Calculate all technical indicators"
+  is_active: true
+
+# Daily Volatility Analytics - After indicators
+- name: daily_analytics_calculation
+  cron_schedule: "30 22 * * 1-5"
+  target_assets:
+    - calculate_volatility_asset
+  config:
+    description: "Calculate volatility and analytics"
+  is_active: true
+
+# Daily Date Marker - Midnight UTC
+- name: daily_date_marker
+  cron_schedule: "0 0 * * *"
+  target_assets:
+    - calculate_todays_date_asset
+  config:
+    description: "Mark today's date"
+  is_active: true

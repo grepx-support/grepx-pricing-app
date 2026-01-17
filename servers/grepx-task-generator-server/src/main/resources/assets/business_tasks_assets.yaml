@@ -1,0 +1,270 @@
+# Business Tasks - Dagster Assets Configuration
+# ==============================================
+# Assets orchestrate business tasks via Dagster -> Celery
+# Groups: external (data ingestion), internal (calculations/indicators)
+
+# =============================================================================
+# EXTERNAL GROUP - Data Ingestion
+# =============================================================================
+
+- name: download_active_stocks_asset
+  description: Load active stock tickers from CSV file into database
+  group_name: external
+  asset_type: source
+  celery_task_name: business-tasks.external.download_active_stocks
+  dependencies: []
+  config: {}
+  task_args: []
+  task_kwargs:
+    csv_file_path: "data/tickers.csv"
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: download_close_prices_asset
+  description: Fetch daily close prices from Yahoo Finance for all active tickers
+  group_name: external
+  asset_type: source
+  celery_task_name: business-tasks.external.download_from_yahoo_close_price
+  dependencies:
+    - download_active_stocks_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: "1d"
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+# =============================================================================
+# INTERNAL GROUP - Calculations and Indicators
+# =============================================================================
+
+- name: calculate_todays_date_asset
+  description: Calculate and store today's date for reference
+  group_name: internal
+  asset_type: utility
+  celery_task_name: business-tasks.internal.calculate_todays_date
+  dependencies: []
+  config: {}
+  task_args: []
+  task_kwargs:
+    source: "dagster"
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_sma_asset
+  description: Calculate Simple Moving Average (20-period) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.sma
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 20
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_ema_asset
+  description: Calculate Exponential Moving Average (20-period) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.ema
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 20
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_rsi_asset
+  description: Calculate Relative Strength Index (14-period) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.rsi
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 14
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_macd_asset
+  description: Calculate MACD (12/26/9) indicator for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.macd
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    fast_period: 12
+    slow_period: 26
+    signal_period: 9
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_bollinger_bands_asset
+  description: Calculate Bollinger Bands (20-period, 2 std dev) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.bollinger_bands
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 20
+    std_dev: 2.0
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_atr_asset
+  description: Calculate Average True Range (14-period) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.atr
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 14
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_adx_asset
+  description: Calculate Average Directional Index (14-period) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.adx
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 14
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_cci_asset
+  description: Calculate Commodity Channel Index (20-period) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.cci
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 20
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_obv_asset
+  description: Calculate On-Balance Volume for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.obv
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs: {}
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_vwap_asset
+  description: Calculate Volume Weighted Average Price for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.vwap
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs: {}
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_stochastic_asset
+  description: Calculate Stochastic Oscillator (14/3) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.stochastic
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    k_period: 14
+    d_period: 3
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_williams_r_asset
+  description: Calculate Williams %R (14-period) for all tickers
+  group_name: internal
+  asset_type: transformation
+  celery_task_name: business-tasks.internal.indicators.williams_r
+  dependencies:
+    - download_close_prices_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 14
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true
+
+- name: calculate_volatility_asset
+  description: Calculate daily volatility (20-period) for all tickers
+  group_name: internal
+  asset_type: analytics
+  celery_task_name: business-tasks.internal.calculate_volatility
+  dependencies:
+    - download_close_prices_asset
+    - calculate_sma_asset
+    - calculate_atr_asset
+  config: {}
+  task_args: []
+  task_kwargs:
+    period: 20
+  partition_type: daily
+  partition_config:
+    start_date: "2024-01-01"
+  is_active: true

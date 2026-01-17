@@ -1,0 +1,588 @@
+# Business Tasks Master Configuration
+# ====================================
+# This file defines all business tasks that are automatically registered
+# in the business_tasks_master table by the task generator server.
+
+# =============================================================================
+# EXTERNAL TASKS - Data Download/Ingestion from external sources
+# =============================================================================
+
+# Download Active Stocks from CSV
+- task_name: download_active_stocks
+  description: Download active stocks from CSV file and store to database
+  task_type: data_download
+  input_arguments:
+    csv_file_path:
+      type: string
+      required: false
+      default: "data/tickers.csv"
+      description: Path to CSV file containing tickers
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date string (defaults to today)
+  destination: active_stocks
+  provider_type: csv
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 600
+  batch_size: 100
+  priority: 5
+  task_metadata:
+    module_path: tasks.external.download_active_stocks
+    function_name: download_active_stocks
+    storage_name: tickers
+    tags: [data, ingestion, tickers, csv]
+
+# Download Close Prices from Yahoo Finance
+- task_name: download_from_yahoo_close_price
+  description: Download close prices from Yahoo Finance for active tickers and store to database
+  task_type: data_download
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers (defaults to fetching from active_stocks)
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date string (defaults to today)
+    period:
+      type: string
+      required: false
+      default: "1d"
+      description: Yahoo Finance period (1d, 5d, 1mo, etc.)
+  destination: close_price
+  provider_type: yahoo_finance
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 1800
+  batch_size: 50
+  priority: 5
+  depends_on: [download_active_stocks]
+  task_metadata:
+    module_path: tasks.external.download_from_yahoo_close_price
+    function_name: download_from_yahoo_close_price
+    storage_name: tickers
+    tags: [data, ingestion, prices, yahoo]
+
+# =============================================================================
+# INTERNAL TASKS - Calculations and Transformations
+# =============================================================================
+
+# Calculate Today's Date
+- task_name: calculate_todays_date
+  description: Calculate and store today's date to database
+  task_type: utility
+  input_arguments:
+    source:
+      type: string
+      required: false
+      default: "system"
+      description: Source identifier
+  destination: todays_date
+  provider_type: null
+  active_flag: true
+  retry_attempts: 1
+  timeout_seconds: 30
+  batch_size: 1
+  priority: 10
+  task_metadata:
+    module_path: tasks.internal.calculate_todays_date
+    function_name: calculate_todays_date
+    storage_name: stock_analysis
+    tags: [utility, date]
+
+# Read Today's Date
+- task_name: read_todays_date
+  description: Read today's date from database
+  task_type: utility
+  input_arguments:
+    date:
+      type: string
+      required: false
+      default: null
+      description: Specific date to read (defaults to today)
+  destination: null
+  provider_type: null
+  active_flag: true
+  retry_attempts: 1
+  timeout_seconds: 30
+  batch_size: 1
+  priority: 10
+  task_metadata:
+    module_path: tasks.internal.read_todays_date
+    function_name: read_todays_date
+    storage_name: stock_analysis
+    tags: [utility, date, read]
+
+# Calculate Volatility
+- task_name: calculate_volatility
+  description: Calculate volatility (standard deviation of daily returns) for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers (defaults to active_stocks)
+    period:
+      type: integer
+      required: false
+      default: 20
+      description: Number of days for volatility calculation
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for the calculation (defaults to today)
+  destination: volatility
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.calculate_volatility
+    function_name: calculate_volatility
+    storage_name: stock_analysis
+    tags: [calculation, volatility, metrics]
+
+# =============================================================================
+# TECHNICAL INDICATORS
+# =============================================================================
+
+# Simple Moving Average (SMA)
+- task_name: calculate_sma
+  description: Calculate Simple Moving Average indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    period:
+      type: integer
+      required: false
+      default: 20
+      description: Number of periods for moving average
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.sma
+    function_name: calculate_sma
+    indicator_class: SMA
+    storage_name: stock_analysis
+    tags: [indicator, technical, moving_average]
+
+# Exponential Moving Average (EMA)
+- task_name: calculate_ema
+  description: Calculate Exponential Moving Average indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    period:
+      type: integer
+      required: false
+      default: 20
+      description: Number of periods for EMA
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.ema
+    function_name: calculate_ema
+    indicator_class: EMA
+    storage_name: stock_analysis
+    tags: [indicator, technical, moving_average]
+
+# Relative Strength Index (RSI)
+- task_name: calculate_rsi
+  description: Calculate Relative Strength Index indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    period:
+      type: integer
+      required: false
+      default: 14
+      description: Number of periods for RSI calculation
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.rsi
+    function_name: calculate_rsi
+    indicator_class: RSI
+    storage_name: stock_analysis
+    tags: [indicator, technical, momentum]
+
+# Moving Average Convergence Divergence (MACD)
+- task_name: calculate_macd
+  description: Calculate MACD indicator (MACD line, signal line, histogram) for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    fast_period:
+      type: integer
+      required: false
+      default: 12
+      description: Fast EMA period
+    slow_period:
+      type: integer
+      required: false
+      default: 26
+      description: Slow EMA period
+    signal_period:
+      type: integer
+      required: false
+      default: 9
+      description: Signal line EMA period
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.macd
+    function_name: calculate_macd
+    indicator_class: MACD
+    storage_name: stock_analysis
+    tags: [indicator, technical, trend]
+
+# Bollinger Bands
+- task_name: calculate_bollinger_bands
+  description: Calculate Bollinger Bands indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    period:
+      type: integer
+      required: false
+      default: 20
+      description: Number of periods for SMA
+    std_dev:
+      type: number
+      required: false
+      default: 2.0
+      description: Number of standard deviations for bands
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.bollinger_bands
+    function_name: calculate_bollinger_bands
+    indicator_class: BollingerBands
+    storage_name: stock_analysis
+    tags: [indicator, technical, volatility]
+
+# Average True Range (ATR)
+- task_name: calculate_atr
+  description: Calculate Average True Range indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    period:
+      type: integer
+      required: false
+      default: 14
+      description: Number of periods for ATR
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.atr
+    function_name: calculate_atr
+    indicator_class: ATR
+    storage_name: stock_analysis
+    tags: [indicator, technical, volatility]
+
+# Average Directional Index (ADX)
+- task_name: calculate_adx
+  description: Calculate Average Directional Index indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    period:
+      type: integer
+      required: false
+      default: 14
+      description: Number of periods for ADX
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.adx
+    function_name: calculate_adx
+    indicator_class: ADX
+    storage_name: stock_analysis
+    tags: [indicator, technical, trend]
+
+# Commodity Channel Index (CCI)
+- task_name: calculate_cci
+  description: Calculate Commodity Channel Index indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    period:
+      type: integer
+      required: false
+      default: 20
+      description: Number of periods for CCI
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.cci
+    function_name: calculate_cci
+    indicator_class: CCI
+    storage_name: stock_analysis
+    tags: [indicator, technical, momentum]
+
+# On-Balance Volume (OBV)
+- task_name: calculate_obv
+  description: Calculate On-Balance Volume indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.obv
+    function_name: calculate_obv
+    indicator_class: OBV
+    storage_name: stock_analysis
+    tags: [indicator, technical, volume]
+
+# Volume Weighted Average Price (VWAP)
+- task_name: calculate_vwap
+  description: Calculate Volume Weighted Average Price indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.vwap
+    function_name: calculate_vwap
+    indicator_class: VWAP
+    storage_name: stock_analysis
+    tags: [indicator, technical, volume]
+
+# Stochastic Oscillator
+- task_name: calculate_stochastic
+  description: Calculate Stochastic Oscillator indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    k_period:
+      type: integer
+      required: false
+      default: 14
+      description: "Stochastic %K period"
+    d_period:
+      type: integer
+      required: false
+      default: 3
+      description: "%D period (smoothing)"
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.stochastic
+    function_name: calculate_stochastic
+    indicator_class: Stochastic
+    storage_name: stock_analysis
+    tags: [indicator, technical, momentum]
+
+# Williams %R
+- task_name: calculate_williams_r
+  description: Calculate Williams %R indicator for tickers
+  task_type: indicator_calculation
+  input_arguments:
+    tickers:
+      type: array
+      required: false
+      default: null
+      description: List of tickers
+    period:
+      type: integer
+      required: false
+      default: 14
+      description: Number of periods for Williams %R
+    date:
+      type: string
+      required: false
+      default: null
+      description: Date for calculation
+  destination: indicators
+  provider_type: null
+  active_flag: true
+  retry_attempts: 3
+  timeout_seconds: 300
+  batch_size: 50
+  priority: 5
+  depends_on: [download_from_yahoo_close_price]
+  task_metadata:
+    module_path: tasks.internal.indicators.williams_r
+    function_name: calculate_williams_r
+    indicator_class: WilliamsR
+    storage_name: stock_analysis
+    tags: [indicator, technical, momentum]

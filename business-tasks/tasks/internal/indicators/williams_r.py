@@ -56,3 +56,7 @@ class WilliamsR(Indicator):
         
         return results
 
+def calculate_williams_r(price_data: List[Dict[str, Any]], period: int = 14) -> List[Dict[str, Any]]:
+    """Helper function to calculate Williams %R indicator."""
+    williams_r = WilliamsR(period)
+    return williams_r.calculate(price_data)

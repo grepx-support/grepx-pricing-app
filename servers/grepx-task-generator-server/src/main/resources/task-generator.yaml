@@ -1,24 +1,43 @@
 # Task Generator Configuration
 # This file defines which tables to bootstrap and which files to load
+#
+# On startup, the task generator server will:
+# 1. Create all tables from SQLAlchemy models
+# 2. Load seed data from YAML files in resources/{table_name}/
+# 3. Upsert data using unique constraints (idempotent)
 
 tables:
+  # Storage configurations (MongoDB, SQLite, etc.)
   - name: storage_master
     files:
       - database.yaml
-    
+
+  # Celery task registrations
   - name: celery_tasks
     files:
       - sample_tasks.yaml
-    
+      - business_tasks.yaml
+
+  # Dagster asset definitions
   - name: assets
     files:
       - sample_assets.yaml
-    
+      - business_tasks_assets.yaml
+
+  # Dagster resources
   - name: resources
     files: []
-    
+
+  # Dagster schedules (cron-based)
   - name: schedules
-    files: []
-    
+    files:
+      - business_tasks_schedules.yaml
+
+  # Dagster sensors (event-driven)
   - name: sensors
     files: []
+
+  # Business tasks master (task definitions)
+  - name: business_tasks_master
+    files:
+      - tasks.yaml

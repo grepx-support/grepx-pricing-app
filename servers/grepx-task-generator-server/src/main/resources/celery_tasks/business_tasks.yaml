@@ -1,0 +1,248 @@
+# Business Tasks - Celery Task Registrations
+# ===========================================
+# External tasks (data download) and internal tasks (calculations, indicators)
+# Module paths must include 'business-tasks' for the task loader to find them
+
+# =============================================================================
+# EXTERNAL TASKS - Data Download/Ingestion
+# =============================================================================
+
+- name: business-tasks.external.download_active_stocks
+  module_path: business-tasks.tasks.external.download_active_stocks
+  function_name: download_active_stocks
+  description: Download active stocks from CSV file and store to database
+  tags: [data, ingestion, tickers, csv, external]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 3
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 600
+  is_active: true
+
+- name: business-tasks.external.download_from_yahoo_close_price
+  module_path: business-tasks.tasks.external.download_from_yahoo_close_price
+  function_name: download_from_yahoo_close_price
+  description: Download close prices from Yahoo Finance for active tickers
+  tags: [data, ingestion, prices, yahoo, external]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 3
+    interval_start: 1
+    interval_step: 1.0
+  timeout: 1800
+  is_active: true
+
+# =============================================================================
+# INTERNAL TASKS - Utility
+# =============================================================================
+
+- name: business-tasks.internal.calculate_todays_date
+  module_path: business-tasks.tasks.internal.calculate_todays_date
+  function_name: calculate_todays_date
+  description: Calculate and store today's date
+  tags: [utility, date, internal]
+  options:
+    bind: false
+  retry_policy: {}
+  timeout: 30
+  is_active: true
+
+- name: business-tasks.internal.read_todays_date
+  module_path: business-tasks.tasks.internal.read_todays_date
+  function_name: read_todays_date
+  description: Read today's date from database
+  tags: [utility, date, read, internal]
+  options:
+    bind: false
+  retry_policy: {}
+  timeout: 30
+  is_active: true
+
+- name: business-tasks.internal.calculate_volatility
+  module_path: business-tasks.tasks.internal.calculate_volatility
+  function_name: calculate_volatility
+  description: Calculate volatility (standard deviation of returns) for tickers
+  tags: [calculation, volatility, metrics, internal]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+# =============================================================================
+# TECHNICAL INDICATORS
+# =============================================================================
+
+- name: business-tasks.internal.indicators.sma
+  module_path: business-tasks.tasks.internal.indicators.sma
+  function_name: calculate_sma
+  description: Calculate Simple Moving Average indicator
+  tags: [indicator, technical, moving_average]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.ema
+  module_path: business-tasks.tasks.internal.indicators.ema
+  function_name: calculate_ema
+  description: Calculate Exponential Moving Average indicator
+  tags: [indicator, technical, moving_average]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.rsi
+  module_path: business-tasks.tasks.internal.indicators.rsi
+  function_name: calculate_rsi
+  description: Calculate Relative Strength Index indicator
+  tags: [indicator, technical, momentum]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.macd
+  module_path: business-tasks.tasks.internal.indicators.macd
+  function_name: calculate_macd
+  description: Calculate MACD indicator (MACD line, signal, histogram)
+  tags: [indicator, technical, trend]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.bollinger_bands
+  module_path: business-tasks.tasks.internal.indicators.bollinger_bands
+  function_name: calculate_bollinger_bands
+  description: Calculate Bollinger Bands indicator
+  tags: [indicator, technical, volatility]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.atr
+  module_path: business-tasks.tasks.internal.indicators.atr
+  function_name: calculate_atr
+  description: Calculate Average True Range indicator
+  tags: [indicator, technical, volatility]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.adx
+  module_path: business-tasks.tasks.internal.indicators.adx
+  function_name: calculate_adx
+  description: Calculate Average Directional Index indicator
+  tags: [indicator, technical, trend]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.cci
+  module_path: business-tasks.tasks.internal.indicators.cci
+  function_name: calculate_cci
+  description: Calculate Commodity Channel Index indicator
+  tags: [indicator, technical, momentum]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.obv
+  module_path: business-tasks.tasks.internal.indicators.obv
+  function_name: calculate_obv
+  description: Calculate On-Balance Volume indicator
+  tags: [indicator, technical, volume]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.vwap
+  module_path: business-tasks.tasks.internal.indicators.vwap
+  function_name: calculate_vwap
+  description: Calculate Volume Weighted Average Price indicator
+  tags: [indicator, technical, volume]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.stochastic
+  module_path: business-tasks.tasks.internal.indicators.stochastic
+  function_name: calculate_stochastic
+  description: Calculate Stochastic Oscillator indicator
+  tags: [indicator, technical, momentum]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true
+
+- name: business-tasks.internal.indicators.williams_r
+  module_path: business-tasks.tasks.internal.indicators.williams_r
+  function_name: calculate_williams_r
+  description: Calculate Williams %R indicator
+  tags: [indicator, technical, momentum]
+  options:
+    bind: false
+  retry_policy:
+    max_retries: 2
+    interval_start: 0
+    interval_step: 0.5
+  timeout: 300
+  is_active: true

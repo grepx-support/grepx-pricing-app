@@ -2,26 +2,27 @@
 # Data tasks
 from .data import load_tickers
 
-# Fundamentals tasks
-from .fundamentals import (
-    download_financial_data,
-    extract_financial_fields,
-    calculate_free_cash_flow,
-    calculate_debt_to_equity,
-    calculate_current_ratio,
-    calculate_net_profit_margin,
-    calculate_return_on_equity,
+# External tasks - download from external sources
+from .external import (
+    download_active_stocks,
+    download_from_yahoo_close_price,
+)
+
+# Internal tasks - calculations and processing
+from .internal import (
+    calculate_todays_date,
+    read_todays_date,
+    calculate_volatility,
 )
 
 __all__ = [
     # Data
     'load_tickers',
-    # Fundamentals
-    'download_financial_data',
-    'extract_financial_fields',
-    'calculate_free_cash_flow',
-    'calculate_debt_to_equity',
-    'calculate_current_ratio',
-    'calculate_net_profit_margin',
-    'calculate_return_on_equity',
+    # External
+    'download_active_stocks',
+    'download_from_yahoo_close_price',
+    # Internal
+    'calculate_todays_date',
+    'read_todays_date',
+    'calculate_volatility',
 ]

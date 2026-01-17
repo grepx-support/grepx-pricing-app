@@ -76,3 +76,7 @@ class Stochastic(Indicator):
         
         return results
 
+def calculate_stochastic(price_data: List[Dict[str, Any]], period: int = 14, smooth_k: int = 3, smooth_d: int = 3) -> List[Dict[str, Any]]:
+    """Helper function to calculate Stochastic indicator."""
+    stochastic = Stochastic(period, smooth_k, smooth_d)
+    return stochastic.calculate(price_data)
