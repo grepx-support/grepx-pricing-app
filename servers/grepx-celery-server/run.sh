@@ -83,6 +83,9 @@ start() {
     
     # Start worker
     echo "--- Starting Celery Worker ---" >> "$CELERY_LOG"
+    # Export environment variables for the worker process
+    export PROJECT_ROOT="$PROJECT_ROOT"
+    export GREPX_MASTER_DB_URL="$(echo "$GREPX_MASTER_DB_URL" | sed "s|\${PROJECT_ROOT}|$PROJECT_ROOT|g")"
     python -m celery -A src.main.celery_app worker --loglevel=info --pool=solo >> "$CELERY_LOG" 2>&1 &
     WORKER_PID=$!
     echo $WORKER_PID > "$PID_FILE"
@@ -171,7 +174,7 @@ stop() {
     pkill -f "flower.*--port" 2>/dev/null || true
     
     # On Windows/Git Bash, kill processes on port 5555
-    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]] || [[ -n "$WINDIR" ]]; then
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]] || [[ -n "${WINDIR:-}" ]]; then
         echo "  Killing processes on port ${FLOWER_PORT:-5555}..."
         # Find and kill process on port 5555
         netstat -ano 2>/dev/null | grep ":${FLOWER_PORT:-5555}" | grep LISTENING | awk '{print $5}' | while read pid; do
