@@ -1,7 +1,5 @@
-import setup_paths
-
-from api import create_app
 import uvicorn
+from app import create_app
 
 app = create_app()
 
