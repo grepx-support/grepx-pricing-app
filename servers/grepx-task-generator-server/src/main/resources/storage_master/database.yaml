@@ -1,0 +1,27 @@
+# Storage master configurations
+#- id: 1
+#  storage_name: grepx_new_master_sqlite
+#  storage_type: sqlite
+#  description: "Main SQLite master database for storing configuration and task metadata"
+#  connection_string: "sqlite:///data/business_task_master_1.db"
+#  file_path: "data/business_task_master_1.db"
+#  is_default: true
+#  active_flag: true
+#  max_connections: 10
+#  timeout_seconds: 30
+
+- id: 2
+  storage_name: tickers
+  storage_type: mongodb
+  description: "MongoDB database for ticker reference data"
+  connection_string: "mongodb://admin:password123@localhost:27017/ticker_database?authSource=admin"
+  host: localhost
+  port: 27017
+  database_name: ticker_database
+  username: admin
+  password: password123
+  auth_source: admin
+  is_default: false
+  active_flag: true
+  max_connections: 20
+  timeout_seconds: 30

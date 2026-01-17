@@ -11,7 +11,6 @@ from .schemas import (
     HealthResponse
 )
 from .routes import router
-from .app import create_app, lifespan
 
 __all__ = [
     'QueryRequest',
@@ -25,6 +24,4 @@ __all__ = [
     'CountResponse',
     'HealthResponse',
     'router',
-    'create_app',
-    'lifespan'
 ]

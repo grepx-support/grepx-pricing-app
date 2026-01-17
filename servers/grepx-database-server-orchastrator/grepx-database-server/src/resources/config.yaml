@@ -4,6 +4,7 @@
 master_db:
   enabled: true
   type: sqlite
+  connection_string: ${GREPX_MASTER_DB_URL}
   # connection_string is loaded from GREPX_MASTER_DB_URL environment variable
   # Ensure run.sh loads env.common before starting the server
 
