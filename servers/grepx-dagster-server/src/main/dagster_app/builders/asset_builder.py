@@ -53,7 +53,7 @@ class DynamicAssetBuilder:
                 config = asset_data.config if asset_data.config else {}
 
             partition_def = None
-            if partition_type:
+            if partition_type and partition_type != 'none':
                 partition_def = DynamicAssetFactory.create_partition_def(partition_type, partition_config)
 
             asset_func = DynamicAssetFactory.create_asset_function(asset_data, self.task_client)

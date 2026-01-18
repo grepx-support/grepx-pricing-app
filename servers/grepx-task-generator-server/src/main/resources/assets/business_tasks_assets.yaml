@@ -17,9 +17,8 @@
   task_args: []
   task_kwargs:
     csv_file_path: "data/tickers.csv"
-  partition_type: daily
-  partition_config:
-    start_date: "2024-01-01"
+  partition_type: none
+  partition_config: {}
   is_active: true
 
 - name: download_close_prices_asset
@@ -31,8 +30,7 @@
     - download_active_stocks_asset
   config: {}
   task_args: []
-  task_kwargs:
-    period: "1d"
+  task_kwargs: {}
   partition_type: daily
   partition_config:
     start_date: "2024-01-01"

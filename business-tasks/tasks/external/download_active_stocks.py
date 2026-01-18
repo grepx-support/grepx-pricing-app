@@ -21,23 +21,16 @@ class DownloadActiveStocks(DownloadTask):
             storage_name=config.TICKER_STORAGE
         )
 
-    def fetch_data(self, csv_file_path: str = None, date: str = None, partition_key: str = None, **kwargs) -> List[Dict[str, Any]]:
+    def fetch_data(self, csv_file_path: str = None) -> List[Dict[str, Any]]:
         """
         Read tickers from CSV file.
 
         Args:
             csv_file_path: Path to CSV file (default: data/tickers.csv)
-            date: Date string (default: today)
-            partition_key: Partition key from Dagster (used as date if date not provided)
 
         Returns:
             List of ticker records
         """
-        if date is None and partition_key is not None:
-            date = partition_key
-        if date is None:
-            date = datetime.now().strftime("%Y-%m-%d")
-
         # Resolve CSV path
         if csv_file_path is None:
             csv_file_path = "data/tickers.csv"
@@ -66,39 +59,38 @@ class DownloadActiveStocks(DownloadTask):
         if ticker_col is None:
             raise ValueError(f"No ticker column found. Available columns: {list(df.columns)}")
 
-        # Build records
+        # Build records - date is when the asset runs (current time)
+        current_date = datetime.now().strftime("%Y-%m-%d")
         records = []
         for _, row in df.iterrows():
             ticker = str(row[ticker_col]).strip().upper()
             records.append({
                 "ticker": ticker,
-                "date": date,
+                "date": current_date,
                 "source": "csv"
             })
 
         logger.info(f"Loaded {len(records)} tickers from {csv_path}")
         return records
 
+    def _get_filter_fields(self, record: Dict[str, Any]) -> List[str]:
+        """Filter by ticker only - update existing records instead of inserting duplicates."""
+        return ["ticker"]
+
 
 # Task instance
 _task_instance = DownloadActiveStocks()
 
 
-def download_active_stocks(csv_file_path: str = None, date: str = None, partition_key: str = None, **kwargs) -> Dict[str, Any]:
+def download_active_stocks(csv_file_path: str = None, **kwargs) -> Dict[str, Any]:
     """
     Download active stocks from CSV and store to database.
 
     Args:
         csv_file_path: Path to CSV file (default: data/tickers.csv)
-        date: Date string (default: today)
-        partition_key: Partition key from Dagster (used as date if date not provided)
-        **kwargs: Additional arguments
+        **kwargs: Additional arguments (ignored, for Dagster compatibility)
 
     Returns:
         Result dictionary with status and counts
     """
-    # Use partition_key as date if date is not provided
-    if date is None and partition_key is not None:
-        date = partition_key
-    
-    return _task_instance.execute(csv_file_path=csv_file_path, date=date)
+    return _task_instance.execute(csv_file_path=csv_file_path)

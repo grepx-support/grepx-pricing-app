@@ -68,20 +68,22 @@ class DownloadFromYahooClosePrice(DownloadTask):
         """Synchronous wrapper for getting active tickers."""
         return asyncio.run(self._get_active_tickers())
 
-    def fetch_data(self, tickers: List[str] = None, date: str = None, period: str = "1d") -> List[Dict[str, Any]]:
+    def fetch_data(self, tickers: List[str] = None, date: str = None, partition_key: str = None) -> List[Dict[str, Any]]:
         """
         Fetch close prices from Yahoo Finance.
 
         Args:
             tickers: List of tickers (default: fetch from active_stocks)
             date: Date string (default: today)
-            period: Yahoo Finance period (default: 1d)
+            partition_key: Partition key from Dagster (used as target date)
 
         Returns:
             List of close price records
         """
-        if date is None:
-            date = datetime.now().strftime("%Y-%m-%d")
+        # Use partition_key as the target date if provided
+        target_date = partition_key or date
+        if target_date is None:
+            target_date = datetime.now().strftime("%Y-%m-%d")
 
         # Get tickers from active_stocks if not provided
         if tickers is None:
@@ -94,34 +96,44 @@ class DownloadFromYahooClosePrice(DownloadTask):
 
         records = []
 
+        # Parse target date and calculate date range for fetching
+        # We fetch a small range to ensure we get the target date's data
+        target_dt = datetime.strptime(target_date, "%Y-%m-%d")
+        # Fetch from target date to day after to ensure we get the target date
+        start_date = target_date
+        # Add one day to end_date to include target_date in yfinance results
+        from datetime import timedelta
+        end_dt = target_dt + timedelta(days=1)
+        end_date = end_dt.strftime("%Y-%m-%d")
+
+        logger.info(f"Fetching close prices for date: {target_date}")
+
         for ticker in tickers:
             try:
-                # Fetch data from Yahoo Finance
+                # Fetch data from Yahoo Finance for the specific date range
                 stock = yf.Ticker(ticker)
-                hist = stock.history(period=period)
+                hist = stock.history(start=start_date, end=end_date)
 
                 if hist.empty:
-                    logger.warning(f"No data for ticker: {ticker}")
+                    logger.warning(f"No data for ticker {ticker} on date {target_date}")
                     continue
 
-                # Get the latest close price
-                latest = hist.iloc[-1]
-                record_date = hist.index[-1].strftime("%Y-%m-%d")
-
-                records.append({
-                    "ticker": ticker,
-                    "date": record_date,
-                    "price": float(latest['Close']),
-                    "source": "yahoo"
-                })
-
-                logger.debug(f"Fetched {ticker}: {latest['Close']:.2f}")
+                # Store ALL rows returned (should be just the target date)
+                for idx, row in hist.iterrows():
+                    record_date = idx.strftime("%Y-%m-%d")
+                    records.append({
+                        "ticker": ticker,
+                        "date": record_date,
+                        "price": float(row['Close']),
+                        "source": "yahoo"
+                    })
+                    logger.debug(f"Fetched {ticker} for {record_date}: {row['Close']:.2f}")
 
             except Exception as e:
                 logger.error(f"Failed to fetch {ticker}: {e}")
                 continue
 
-        logger.info(f"Fetched close prices for {len(records)} tickers")
+        logger.info(f"Fetched close prices for {len(records)} ticker-date combinations")
         return records
 
 
@@ -129,16 +141,17 @@ class DownloadFromYahooClosePrice(DownloadTask):
 _task_instance = DownloadFromYahooClosePrice()
 
 
-def download_from_yahoo_close_price(tickers: List[str] = None, date: str = None, period: str = "1d", **kwargs) -> Dict[str, Any]:
+def download_from_yahoo_close_price(tickers: List[str] = None, date: str = None, partition_key: str = None, **kwargs) -> Dict[str, Any]:
     """
     Download close prices from Yahoo Finance and store to database.
 
     Args:
         tickers: List of tickers (default: fetch from active_stocks)
         date: Date string (default: today)
-        period: Yahoo Finance period (default: 1d)
+        partition_key: Partition key from Dagster (used as target date)
+        **kwargs: Additional arguments (ignored, for Dagster compatibility)
 
     Returns:
         Result dictionary with status and counts
     """
-    return _task_instance.execute(tickers=tickers, date=date, period=period)
+    return _task_instance.execute(tickers=tickers, date=date, partition_key=partition_key)
